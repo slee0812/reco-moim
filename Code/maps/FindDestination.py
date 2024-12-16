@@ -1,5 +1,7 @@
 import requests
 import numpy as np
+import pandas as pd
+import math
 
 KAKAO_API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"
 
@@ -69,8 +71,47 @@ def find_optimal_station(origins, subway_stations):
         }
     }
 
+
+# Haversine formula: 두 지점 간의 거리 계산
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371  # 지구 반지름 (km)
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c  # km 단위로 반환
+
+
+
+
 # 사용 예시
 if __name__ == "__main__":
+    # CSV 파일 읽기
+    data = pd.read_csv('../../Data/maps/subway_stations.csv')
+
+    # 현재 위치 (위도, 경도)
+    current_lat = 37.4842
+    current_lon = 126.9293
+
+    # '위도'와 '경도'가 숫자 형식인지 확인하고, 결측값 처리
+    data['위도'] = pd.to_numeric(data['위도'], errors='coerce')
+    data['경도'] = pd.to_numeric(data['경도'], errors='coerce')
+
+    # 결측값 처리 (NaN이 있는 경우, 예시로 NaN을 0으로 채움)
+    data = data.fillna({'위도': 0, '경도': 0})
+
+    # 각 전철역과 현재 위치 사이의 거리 계산
+    data['거리'] = data.apply(lambda row: haversine(current_lat, current_lon, row['위도'], row['경도']), axis=1)
+
+    # 가장 가까운 역 찾기
+    nearest_station = data.loc[data['거리'].idxmin()]
+
+    # 결과 출력
+    print(f"가장 가까운 역: {nearest_station['역사명']}")
+    print(f"호선: {nearest_station['호선']}")
+    print(f"위도: {nearest_station['위도']}, 경도: {nearest_station['경도']}")
+    print(f"거리: {nearest_station['거리']:.2f} km")
+
     # Step 1: 출발지 설정
     # origins = [(37.5082, 126.8916), (37.4855, 126.9019)]  # 신도림, 구로디지털단지
     origins = [(37.4019, 126.9229), (37.3947, 126.9631), (37.4842, 126.9293)]  # 안양역, 평촌역, 신림역역
