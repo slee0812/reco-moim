@@ -1,67 +1,133 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>모임장소 추천서비스</title>
-    <link rel="stylesheet" href="Recommend.css" />
-    <style>
-      body {
-        display: flex;
-        flex-direction: column;
-        min-height: 90vh;
-        margin: 0;
-      }
-      #main-container {
-        display: flex;
-        flex-direction: row;
-        flex-grow: 1;
-        width: 100%;
-        overflow: auto;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>모임장소 추천서비스</title>
+  <link rel="stylesheet" href="Recommend.css" />
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 90vh;
+      margin: 0;
+    }
+    #main-container {
+      display: flex;
+      flex-direction: row;
+      flex-grow: 1;
+      width: 100%;
+      overflow: hidden; /* auto에서 hidden으로 변경 */
+    }
 
-      #map, #prompt {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 2px solid #333;
-        border-radius: 10px;
-        margin: 10px;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      }
+    #map, .chat-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start; /* center에서 flex-start로 변경 */
+      align-items: stretch; /* center에서 stretch로 변경 */
+      border: 2px solid #333;
+      border-radius: 10px;
+      margin: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      height: calc(100vh - 200px); /* 뷰포트 높이에서 대략적인 헤더와 푸터 높이를 뺀 값 */
+      overflow: hidden; /* 추가 */
+    }
 
-      #map {
-        flex: 7;
-      }
+    #map {
+      flex: 6;
+    }
 
-      #prompt {
-        flex: 3;
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <div id="container">
-        <div id="meeting-info">
-          <h2 id="meeting-name"></h2>
-          <div id="meeting-details"></div>
-        </div>
-        <div id="friends-container"></div>
-      </div>
-    </header>
+    .chat-container {
+      flex: 4; /* 추가: map과의 비율 조정 */
+      width: auto; /* 300px에서 auto로 변경 */
+    }
 
-    <main id="main-container">
-      <div id="map">map이 나올 공간</div>
-      <div id="prompt">프롬프트 작성</div>
-    </main>
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
 
-    <footer>
-      <p>© 2024 Reco-moim. 모임 장소 추천 서비스</p>
-    </footer>
+    .chat-message {
+      background-color: #007bff;
+      color: white;
+      border-radius: 20px 20px 0 20px;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+      position: relative;
+      clear: both;
+      float: right;
+    }
 
-    <script src="Recommend.js">
+    .chat-message::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: -10px;
+      width: 0;
+      height: 0;
+      border: 10px solid transparent;
+      border-left-color: #007bff;
+      border-bottom: 0;
+      border-right: 0;
+    }
 
-    </script>
-  </body>
+    .chat-input {
+      display: flex;
+      padding: 10px;
+    }
+
+    #message-input {
+      flex: 1;
+      padding: 5px;
+    }
+
+    #send-button {
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+<body>
+<header>
+  <div id="container">
+    <div id="meeting-info">
+      <h2 id="meeting-name"></h2>
+      <div id="meeting-details"></div>
+    </div>
+    <div id="friends-container"></div>
+  </div>
+</header>
+
+<main id="main-container">
+  <div id="map">map이 나올 공간</div>
+  <div class="chat-container">
+    <div class="chat-messages">
+      <!-- 채팅 메시지들이 여기에 추가됩니다 -->
+    </div>
+    <div class="chat-input">
+      <input type="text" id="message-input" placeholder="메시지를 입력하세요...">
+      <button id="send-button">전송</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p>Team Recomo의 모임장소 추천서비스 &copy; 2024</p>
+</footer>
+
+<script src="Recommend.js">
+
+</script>
+</body>
 </html>
