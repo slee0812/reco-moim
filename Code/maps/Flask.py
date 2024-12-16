@@ -8,7 +8,7 @@ API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"
 
 @app.route("/")
 def index():
-    return render_template("test.html")
+    return render_template("Recommend.html")
 
 @app.route("/centroid")
 def get_centroid():
@@ -19,7 +19,7 @@ def get_centroid():
         (37.4842, 126.9293)
     ]
     # 중심점 계산
-    latitude, longitude = calculate_centroid(subway_stations)
+    latitude, longitude = 37.47656223234824,126.98155858357366
     
     # centroid 값을 반환
     return jsonify({
