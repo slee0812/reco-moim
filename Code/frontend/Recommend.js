@@ -3,6 +3,9 @@ const meetingName = urlParams.get("name");
 const meetingDate = urlParams.get("date");
 const meetingTime = urlParams.get("time");
 const invitedFriends = urlParams.get("invitedFriends");
+const chatMessages = document.querySelector('.chat-messages');
+const messageInput = document.getElementById('message-input');
+const sendButton = document.getElementById('send-button');
 
 if (meetingName && meetingDate && meetingTime) {
   // 모임 이름 업데이트
@@ -24,15 +27,41 @@ if (meetingName && meetingDate && meetingTime) {
   const friendsContainer = document.getElementById("friends-container");
   if (friendsContainer) {
     const friendsArray = invitedFriends
-      ? invitedFriends.split(",").map((friend) => friend.trim())
-      : [];
+        ? invitedFriends.split(",").map((friend) => friend.trim())
+        : [];
     friendsContainer.innerHTML = friendsArray
-      .map((friend) => `<span class="friend-box">${friend}</span>`)
-      .join("");
+        .map((friend) => `<span class="friend-box">${friend}</span>`)
+        .join("");
   }
 }
 
 // 인원 수 입력 제한 설정
-document.getElementById("memberCount").addEventListener("change", function () {
-  if (this.value < 2) this.value = 2;
+const memberCountInput = document.getElementById("memberCount");
+if (memberCountInput) {
+  memberCountInput.addEventListener("change", function () {
+    if (this.value < 2) this.value = 2;
+  });
+}
+
+function addMessage(message) {
+  const messageElement = document.createElement('div');
+  messageElement.className = 'chat-message';
+  messageElement.textContent = message;
+
+  chatMessages.appendChild(messageElement);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+sendButton.addEventListener('click', () => {
+  const message = messageInput.value.trim();
+  if (message) {
+    addMessage(message);
+    messageInput.value = '';
+  }
+});
+
+messageInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    sendButton.click();
+  }
 });
