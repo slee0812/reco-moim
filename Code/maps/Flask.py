@@ -3,11 +3,13 @@ import requests
 from FindDestination import calculate_centroid, haversine
 import pandas as pd
 import math
+import logging
 
 # Flask 앱 초기화 및 템플릿/정적 파일 경로 설정
 app = Flask(__name__,
            template_folder='../frontend/templates',
            static_folder='../frontend/static')
+logging.basicConfig(level=logging.DEBUG)
 
 # API 키 설정
 API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"  # REST API 키
@@ -52,12 +54,10 @@ def get_centroid():
 @app.route("/places")
 def get_places():
     try:
-        # centroid 값 가져오기
-        centroid_data = get_centroid().json
-        latitude = centroid_data['latitude']
-        longitude = centroid_data['longitude']
+        latitude = 37.4842
+        longitude = 126.9293
 
-        # 카카오 로컬 API 호출
+        # 카카오 API 호출
         url = "https://dapi.kakao.com/v2/local/search/keyword.json"
         params = {
             "query": "음식점",
@@ -70,7 +70,9 @@ def get_places():
 
         # 응답 확인 및 반환
         if response.status_code == 200:
-            return jsonify(response.json())
+            result = response.json()
+            result['centroid'] = {"latitude": latitude, "longitude": longitude}
+            return jsonify(result)
         else:
             return jsonify({"error": response.text}), response.status_code
     except Exception as e:
