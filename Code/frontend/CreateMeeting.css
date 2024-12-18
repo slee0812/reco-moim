@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -206,3 +207,213 @@ footer {
   flex-wrap: wrap;
   gap: 10px;
 }
+=======
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+header {
+  background-color: #66bb6a;
+  color: white;
+  text-align: center;
+  padding: 1em 0;
+}
+
+main {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  margin-bottom: 60px; /* footer와 겹치지 않도록 여백 추가 */
+}
+
+section {
+  margin-bottom: 20px;
+}
+
+#filters {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#filter-form label {
+  display: block;
+  margin: 10px 0 5px;
+}
+
+#filter-form input,
+#filter-form select,
+#filter-form button {
+  width: 100%; /* 모든 입력창을 동일한 너비로 설정 */
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* 패딩 포함하여 크기 계산 */
+}
+
+.result-item {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 250px;
+  height: 150px;
+  box-sizing: border-box;
+  text-align: left;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.result-item:hover {
+  background-color: #f0f0f0;
+}
+
+.result-item h3 {
+  margin-top: 0;
+}
+
+#results-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0; /* 간격 제거 */
+  justify-content: flex-start; /* 왼쪽부터 정렬 */
+}
+
+.result-item {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 250px; /* 고정된 너비 설정 */
+  margin: 5px; /* 마진 제거 */
+  box-sizing: border-box;
+}
+
+.result-item h3 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+footer {
+  text-align: center;
+  padding: 10px;
+  background: #66bb6a;
+  color: white;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+
+#container {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#meeting-info {
+  width: 28%; /* 전체 너비의 30%에 가까운 값 */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+#friends-container {
+  width: 68%; /* 전체 너비의 70%에 가까운 값 */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  box-sizing: border-box;
+  display: flex;
+  overflow-y: auto;
+}
+
+.friend-box {
+  background-color: #f0f0f0;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin: 5px;
+  display: inline-block;
+}
+
+#meeting-name {
+  margin-top: 0;
+}
+
+.meeting-details {
+  margin-top: 10px;
+}
+
+.meeting-details p {
+  margin: 5px 0;
+}
+
+.selected-meeting {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 10px 0;
+  color: #333;
+}
+
+#participants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.add-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background-color: #4caf50;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.participant {
+  display: flex;
+  align-items: center;
+  background-color: #f0f0f0;
+  padding: 5px 10px;
+  border-radius: 15px;
+  gap: 5px;
+}
+
+.remove-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background-color: #ff4444;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#participantList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+>>>>>>> origin/db_connected_ver
