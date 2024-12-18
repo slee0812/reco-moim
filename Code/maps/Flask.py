@@ -1,9 +1,10 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import requests
 from FindDestination import calculate_centroid, haversine
 import pandas as pd
 import math
 import logging
+import os
 
 # Flask 앱 초기화 및 템플릿/정적 파일 경로 설정
 app = Flask(__name__,
@@ -12,13 +13,13 @@ app = Flask(__name__,
 logging.basicConfig(level=logging.DEBUG)
 
 # API 키 설정
-API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"  # REST API 키
-JAVASCRIPT_KEY = "0dff67bd8267e5a437996508dae7e7d8"  # JavaScript 키
+KAKAO_API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"  # Kakao REST API 키
+KAKAO_JAVASCRIPT_KEY = "0dff67bd8267e5a437996508dae7e7d8"  # Kakao JavaScript 키
+ODSAY_API_KEY = "9Ref0yCZ6ETJkTnNNqtpuw"  # ODsay API 키
 
 @app.route("/")
 def index():
-    # JavaScript 키를 템플릿에 전달
-    return render_template("Recommend.html", JAVASCRIPT_KEY=JAVASCRIPT_KEY)
+    return render_template("Recommend.html", JAVASCRIPT_KEY=KAKAO_JAVASCRIPT_KEY)
 
 @app.route("/centroid")
 def get_centroid():
@@ -33,8 +34,6 @@ def get_centroid():
         # '위도'와 '경도'가 숫자 형식인지 확인하고, 결측값 처리
         data['위도'] = pd.to_numeric(data['위도'], errors='coerce')
         data['경도'] = pd.to_numeric(data['경도'], errors='coerce')
-
-        # 결측값 처리 (NaN이 있는 경우, NaN을 0으로 채움)
         data = data.fillna({'위도': 0, '경도': 0})
 
         # 각 전철역과 현재 위치 사이의 거리 계산
@@ -43,12 +42,12 @@ def get_centroid():
         # 가장 가까운 역 찾기
         nearest_station = data.loc[data['거리'].idxmin()]
         
-        # centroid 값을 반환
         return jsonify({
             "latitude": nearest_station['위도'],
             "longitude": nearest_station['경도']
         })
     except Exception as e:
+        logging.error(f"Error in get_centroid: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/places")
@@ -65,18 +64,86 @@ def get_places():
             "y": str(latitude),
             "radius": 5000,
         }
-        headers = {"Authorization": f"KakaoAK {API_KEY}"}
+        headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
         response = requests.get(url, headers=headers, params=params)
 
-        # 응답 확인 및 반환
         if response.status_code == 200:
             result = response.json()
             result['centroid'] = {"latitude": latitude, "longitude": longitude}
             return jsonify(result)
         else:
+            logging.error(f"Kakao API error: {response.text}")
             return jsonify({"error": response.text}), response.status_code
     except Exception as e:
+        logging.error(f"Error in get_places: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/find-path")
+def find_path():
+    try:
+        # URL 파라미터 가져오기
+        sx = request.args.get('sx')
+        sy = request.args.get('sy')
+        ex = request.args.get('ex')
+        ey = request.args.get('ey')
+        
+        # 파라미터 유효성 검사
+        if not all([sx, sy, ex, ey]):
+            return jsonify({"error": "Missing required parameters"}), 400
+
+        # ODsay API 호출
+        url = "https://api.odsay.com/v1/api/searchPubTransPathT"
+        params = {
+            "apiKey": ODSAY_API_KEY,
+            "SX": sx,
+            "SY": sy,
+            "EX": ex,
+            "EY": ey,
+            "SearchType": 0,
+        }
+        
+        response = requests.get(url, params=params)
+        
+        # 디버깅을 위한 로그
+        logging.debug(f"ODsay API request URL: {url}")
+        logging.debug(f"ODsay API parameters: {params}")
+        logging.debug(f"ODsay API response status: {response.status_code}")
+        logging.debug(f"ODsay API response: {response.text[:200]}...")
+
+        if response.status_code == 200:
+            data = response.json()
+            
+            # 응답 데이터 검증
+            if 'result' not in data:
+                return jsonify({"error": "Invalid response from ODsay API"}), 500
+                
+            # 경로가 없는 경우 처리
+            if 'path' not in data['result']:
+                return jsonify({"message": "No routes found"}), 404
+                
+            return jsonify(data)
+        else:
+            error_msg = f"ODsay API error: Status {response.status_code}"
+            logging.error(error_msg)
+            return jsonify({"error": error_msg}), response.status_code
+            
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Network error in find_path: {str(e)}"
+        logging.error(error_msg)
+        return jsonify({"error": error_msg}), 503
+    except Exception as e:
+        error_msg = f"Unexpected error in find_path: {str(e)}"
+        logging.error(error_msg)
+        return jsonify({"error": error_msg}), 500
+
+# 에러 핸들러
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

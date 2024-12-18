@@ -1,168 +1,190 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>모임장소 추천서비스</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='Recommend.css') }}"
-    />
-    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ JAVASCRIPT_KEY }}&libraries=clusterer"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Recommend.css') }}">
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ JAVASCRIPT_KEY }}&libraries=clusterer,services"></script>
     <style>
-      body {
-        display: flex;
-        flex-direction: column;
-        min-height: 90vh;
-        margin: 0;
-      }
-      #main-container {
-        display: flex;
-        flex-direction: row;
-        flex-grow: 1;
-        width: 100%;
-        overflow: hidden;
-      }
+        /* 인라인 스타일 유지 */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 90vh;
+            margin: 0;
+        }
 
-      #map,
-      .chat-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: stretch;
-        border: 2px solid #333;
-        border-radius: 10px;
-        margin: 10px;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        height: calc(100vh - 200px);
-        overflow: hidden;
-      }
+        #main-container {
+            display: flex;
+            flex-direction: row;
+            flex-grow: 1;
+            width: 100%;
+            overflow: hidden;
+            padding: 20px;
+            box-sizing: border-box;
+        }
 
-      #map {
-        flex: 6;
-        position: relative;
-      }
+        #left-panel {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            margin-right: 20px;
+        }
 
-      .chat-container {
-        flex: 4;
-        width: auto;
-      }
+        #map-container {
+            flex: 7;
+            display: flex;
+            flex-direction: column;
+        }
 
-      .chat-messages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-      }
+        #map {
+            flex: 1;
+            position: relative;
+            border: 2px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            min-height: 500px;
+        }
 
-      .chat-message {
-        background-color: #007bff;
-        color: white;
-        border-radius: 20px 20px 0 20px;
-        padding: 10px 15px;
-        margin-bottom: 10px;
-        max-width: 80%;
-        word-wrap: break-word;
-        position: relative;
-        clear: both;
-        float: right;
-      }
+        .route-selection {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-      .chat-message::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        right: -10px;
-        width: 0;
-        height: 0;
-        border: 10px solid transparent;
-        border-left-color: #007bff;
-        border-bottom: 0;
-        border-right: 0;
-      }
+        .route-option {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
 
-      .chat-input {
-        display: flex;
-        padding: 10px;
-      }
+        .route-option:hover {
+            background-color: #f5f5f5;
+        }
 
-      #message-input {
-        flex: 1;
-        padding: 5px;
-      }
+        .route-option.selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
 
-      #send-button {
-        padding: 5px 10px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
+        .transport-type-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin: 2px;
+            color: white;
+            font-size: 0.9em;
+        }
 
-      .custom-control {
-        position: absolute;
-        bottom: 30px;
-        right: 10px;
-        z-index: 2;
-        background: white;
-        padding: 5px 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
+        .transport-subway {
+            background-color: #3cb44b;
+        }
 
-      #loading {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(255, 255, 255, 0.9);
-        padding: 20px;
-        border-radius: 8px;
-        z-index: 1000;
-        display: none;
-      }
+        .transport-bus {
+            background-color: #4363d8;
+        }
+
+        .transport-walk {
+            background-color: #808080;
+        }
+
+        #path-info {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .instruction-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .info-window {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <header>
-      <div id="container">
-        <div id="meeting-info">
-          <h2 id="meeting-name"></h2>
-          <div id="meeting-details"></div>
+        <div id="container">
+            <div id="meeting-info">
+                <h2 id="meeting-name"></h2>
+                <div id="meeting-details"></div>
+            </div>
+            <div id="friends-container"></div>
         </div>
-        <div id="friends-container"></div>
-      </div>
     </header>
 
-    <main id="main-container">
-      <div id="map"></div>
-      <div class="chat-container">
-        <div class="chat-messages">
-          <!-- 채팅 메시지들이 여기에 추가됩니다 -->
-        </div>
-        <div class="chat-input">
-          <input
-            type="text"
-            id="message-input"
-            placeholder="메시지를 입력하세요..."
-          />
-          <button id="send-button">전송</button>
-        </div>
-      </div>
-    </main>
+    <div id="main-container">
+        <div id="left-panel">
+            <div class="instruction-box">
+                <h3>경로 검색하기</h3>
+                <p>1. 지도에서 출발지를 클릭하세요.</p>
+                <p>2. 도착지를 클릭하세요.</p>
+                <p>3. 추천 경로 중 원하는 경로를 선택하세요.</p>
+            </div>
+            
+            <div id="path-info">
+                <h3>경로 정보</h3>
+                <div id="route-options"></div>
+            </div>
 
-    <footer>
-      <p>© 2024 Reco-moim. 모임 장소 추천 서비스</p>
-    </footer>
+            <div class="chat-container">
+                <div class="chat-messages">
+                    <!-- 채팅 메시지들이 여기에 추가됩니다 -->
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="message-input" placeholder="메시지를 입력하세요...">
+                    <button id="send-button">전송</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="map-container">
+            <div id="map"></div>
+            <div id="map-controls">
+                <button id="reset-path" class="custom-control" style="right: 120px;">경로 초기화</button>
+                <button id="current-location" class="custom-control">내 위치</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Loading indicator -->
-    <div id="loading">데이터를 불러오는 중...</div>
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>데이터를 불러오는 중...</p>
+    </div>
+
+    <footer>
+        <p>© 2024 Reco-moim. 모임 장소 추천 서비스</p>
+    </footer>
+
+    <!-- Templates for dynamic content -->
+    <template id="route-option-template">
+        <div class="route-option" data-route-index="${index}">
+            <div class="route-summary">
+                <strong>경로 ${number}</strong> - ${duration} / ${fare}원
+            </div>
+            <div class="route-details">
+                ${transportTypes}
+            </div>
+        </div>
+    </template>
 
     <script src="{{ url_for('static', filename='Recommend.js') }}"></script>
-  </body>
+</body>
 </html>
