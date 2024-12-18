@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* 기본 스타일 */
 body {
   font-family: Arial, sans-serif;
@@ -139,7 +138,7 @@ header {
 }
 
 .chat-message::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   right: -10px;
@@ -217,7 +216,8 @@ footer {
     flex-direction: column;
   }
 
-  #map, .chat-container {
+  #map,
+  .chat-container {
     flex: none;
     width: 100%;
     height: 50vh;
@@ -228,7 +228,8 @@ footer {
     flex-direction: column;
   }
 
-  #meeting-info, #friends-container {
+  #meeting-info,
+  #friends-container {
     width: 100%;
     margin-bottom: 10px;
   }
@@ -252,259 +253,4 @@ footer {
   margin: 0;
   font-size: 0.9em;
   color: #666;
-=======
-/* 기본 스타일 */
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f4;
-  color: #333;
-  display: flex;
-  flex-direction: column;
-  min-height: 90vh;
-}
-
-/* 헤더 스타일 */
-header {
-  background-color: #66bb6a;
-  color: white;
-  text-align: center;
-  padding: 1em 0;
-}
-
-/* 컨테이너 스타일 */
-#container {
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-#meeting-info {
-  width: 28%;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-
-#friends-container {
-  width: 68%;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  box-sizing: border-box;
-  display: flex;
-  overflow-y: auto;
-}
-
-/* 메인 컨테이너 스타일 */
-#main-container {
-  display: flex;
-  flex-direction: row;
-  flex-grow: 1;
-  width: 100%;
-  overflow: hidden;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-/* 지도 컨테이너 스타일 */
-#map {
-  flex: 6;
-  position: relative;
-  border: 2px solid #333;
-  border-radius: 10px;
-  margin: 10px;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  height: calc(100vh - 200px);
-  overflow: hidden;
-}
-
-/* 지도 컨트롤 스타일 */
-.custom-control {
-  position: absolute;
-  bottom: 30px;
-  right: 10px;
-  z-index: 2;
-  background: white;
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.custom-control:hover {
-  background-color: #f0f0f0;
-}
-
-/* 로딩 인디케이터 스타일 */
-#loading {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.9);
-  padding: 20px;
-  border-radius: 8px;
-  z-index: 1000;
-  display: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* 채팅 컨테이너 스타일 */
-.chat-container {
-  flex: 4;
-  display: flex;
-  flex-direction: column;
-  border: 2px solid #333;
-  border-radius: 10px;
-  margin: 10px;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  height: calc(100vh - 200px);
-  overflow: hidden;
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.chat-message {
-  background-color: #007bff;
-  color: white;
-  border-radius: 20px 20px 0 20px;
-  padding: 10px 15px;
-  margin-bottom: 10px;
-  max-width: 80%;
-  word-wrap: break-word;
-  position: relative;
-  clear: both;
-  float: right;
-}
-
-.chat-message::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: -10px;
-  width: 0;
-  height: 0;
-  border: 10px solid transparent;
-  border-left-color: #007bff;
-  border-bottom: 0;
-  border-right: 0;
-}
-
-.chat-input {
-  display: flex;
-  padding: 10px;
-  border-top: 1px solid #ddd;
-  background-color: white;
-}
-
-#message-input {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-right: 8px;
-}
-
-#send-button {
-  padding: 8px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-#send-button:hover {
-  background-color: #0056b3;
-}
-
-/* 친구 박스 스타일 */
-.friend-box {
-  background-color: #f0f0f0;
-  padding: 5px 10px;
-  border-radius: 5px;
-  margin: 5px;
-  display: inline-block;
-}
-
-/* 모임 정보 스타일 */
-#meeting-name {
-  margin-top: 0;
-  color: white;
-}
-
-.meeting-details p {
-  margin: 5px 0;
-  color: white;
-}
-
-/* 푸터 스타일 */
-footer {
-  text-align: center;
-  padding: 10px;
-  background: #66bb6a;
-  color: white;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  #main-container {
-    flex-direction: column;
-  }
-
-  #map, .chat-container {
-    flex: none;
-    width: 100%;
-    height: 50vh;
-    margin: 10px 0;
-  }
-
-  #container {
-    flex-direction: column;
-  }
-
-  #meeting-info, #friends-container {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-}
-
-/* 카카오맵 인포윈도우 스타일 커스터마이징 */
-.infowindow {
-  padding: 10px;
-  border-radius: 4px;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.infowindow strong {
-  display: block;
-  margin-bottom: 5px;
-  color: #333;
-}
-
-.infowindow p {
-  margin: 0;
-  font-size: 0.9em;
-  color: #666;
->>>>>>> origin/db_connected_ver
 }

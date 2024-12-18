@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="ko">
   <head>
@@ -9,9 +8,7 @@
     <link rel="stylesheet" href="Recommend.css" />
 
     <!-- Kakao Map API -->
-    <script
-      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ JAVASCRIPT_KEY }}&libraries=clusterer"
-    ></script>
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ JAVASCRIPT_KEY }}&libraries=clusterer"></script>
 
     <style>
       body {
@@ -110,116 +107,3 @@
     <script src="Recommend.js"></script>
   </body>
 </html>
-=======
-<!DOCTYPE html>
-<html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>모임장소 추천서비스</title>
-    <!-- CSS 파일 경로 -->
-    <link rel="stylesheet" href="Recommend.css" />
-
-    <!-- Kakao Map API -->
-    <script
-      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ JAVASCRIPT_KEY }}&libraries=clusterer"
-    ></script>
-
-    <style>
-      body {
-        display: flex;
-        flex-direction: column;
-        min-height: 90vh;
-        margin: 0;
-      }
-      header {
-        position: relative;
-        width: 100%;
-      }
-      /* 모임 정보 스타일 */
-      #meeting-info-container {
-        position: absolute;
-        top: 10px;
-        left: 20px; /* 왼쪽으로 이동 */
-        background: #e6f7e6;
-        border: 2px solid #28a745;
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        font-family: Arial, sans-serif;
-        color: #333;
-        z-index: 1000;
-        max-width: 300px;
-      }
-      #meeting-info-container h3 {
-        display: none; /* 모임 정보 제목 숨김 */
-      }
-      #meeting-name {
-        display: block;
-        text-align: center;
-        font-size: 16px;
-        font-weight: bold;
-        margin: 0;
-        color: #28a745;
-      }
-
-      #main-container {
-        display: flex;
-        flex-direction: row;
-        flex-grow: 1;
-        width: 100%;
-        overflow: hidden;
-      }
-      #map,
-      .chat-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: stretch;
-        border: 2px solid #333;
-        border-radius: 10px;
-        margin: 10px;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        height: calc(100vh - 200px);
-        overflow: hidden;
-      }
-      #map {
-        flex: 6;
-        position: relative;
-      }
-      .chat-container {
-        flex: 4;
-        width: auto;
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <div id="meeting-info-container">
-        <span id="meeting-name">친구들과의 저녁식사</span>
-      </div>
-    </header>
-
-    <main id="main-container">
-      <div id="map"></div>
-      <div class="chat-container">
-        <div class="chat-messages">
-          <!-- 채팅 메시지들이 여기에 추가됩니다 -->
-        </div>
-        <div class="chat-input">
-          <input
-            type="text"
-            id="message-input"
-            placeholder="메시지를 입력하세요..."
-          />
-          <button id="send-button">전송</button>
-        </div>
-      </div>
-    </main>
-
-    <!-- JavaScript 파일 경로 -->
-    <script src="Recommend.js"></script>
-  </body>
-</html>
->>>>>>> origin/db_connected_ver
