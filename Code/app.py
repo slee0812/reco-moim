@@ -1,9 +1,16 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+from maps.FindDestination import calculate_centroid, haversine
+import pandas as pd
 import os
 import json
 
 app = Flask(__name__, template_folder="frontend", static_folder="frontend")
+
+# API 키 설정
+KAKAO_API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"  # Kakao REST API 키
+KAKAO_JAVASCRIPT_KEY = "0dff67bd8267e5a437996508dae7e7d8"  # Kakao JavaScript 키
+ODSAY_API_KEY = "9Ref0yCZ6ETJkTnNNqtpuw"  # ODsay API 키
 
 # 데이터베이스 설정
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///preferences.db"
@@ -190,7 +197,34 @@ def delete_meeting(meeting_id):
 @app.route("/recommend")
 def recommend_page():
     meeting_name = request.args.get("meeting_name", "")
-    return render_template("Recommend.html", meeting_name=meeting_name)
+    return render_template("Recommend.html", meeting_name=meeting_name, JAVASCRIPT_KEY=KAKAO_JAVASCRIPT_KEY)
+
+@app.route("/centroid")
+def get_centroid():
+    try:
+        # CSV 파일 읽기
+        data = pd.read_csv('../../Data/maps/subway_stations.csv')
+
+        centroid = calculate_centroid([(37.4842, 126.9293), (37.513768, 127.100080)])
+
+        # '위도'와 '경도'가 숫자 형식인지 확인하고, 결측값 처리
+        data['위도'] = pd.to_numeric(data['위도'], errors='coerce')
+        data['경도'] = pd.to_numeric(data['경도'], errors='coerce')
+        data = data.fillna({'위도': 0, '경도': 0})
+
+        # 각 전철역과 현재 위치 사이의 거리 계산
+        data['거리'] = data.apply(lambda row: haversine(centroid[0], centroid[1], row['위도'], row['경도']), axis=1)
+
+        # 가장 가까운 역 찾기
+        nearest_station = data.loc[data['거리'].idxmin()]
+        result = jsonify({
+            "station": nearest_station['역사명']+"역",
+            "latitude": nearest_station['위도'],
+            "longitude": nearest_station['경도']
+        })
+        return result
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 from urllib.parse import unquote
 

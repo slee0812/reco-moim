@@ -230,3 +230,23 @@ if (memberCountInput) {
     if (this.value < 2) this.value = 2;
   });
 }
+
+// Flask API에서 데이터 가져오기
+function getNearestStation() {
+  // fetch로 API 호출
+  fetch("/centroid")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json(); // JSON 응답을 파싱
+    })
+    .then((data) => {
+      // JSON 데이터 사용
+      console.log("Nearest Station:", data);
+    })
+    .catch((error) => {
+      // 에러 처리
+      console.error("Error fetching the nearest station:", error);
+    });
+}
