@@ -45,6 +45,6 @@ createMeetingButton.addEventListener("click", function () {
   );
 
   if (userConfirmed) {
-    window.location.href = "Create_a_meeting.html";
+    window.location.href = "CreateMeeting.html";
   }
 });
