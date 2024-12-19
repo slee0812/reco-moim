@@ -6,7 +6,7 @@ import os
 import json
 import requests  # Add this import
 
-app = Flask(__name__, template_folder="frontend", static_folder="frontend")
+app = Flask(__name__, template_folder="templates", static_folder="templates")
 
 # API 키 설정
 KAKAO_API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"  # Kakao REST API 키
