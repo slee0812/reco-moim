@@ -29,8 +29,9 @@
       #chat-messages {
         flex: 1;
         padding: 16px;
-        overflow-y: auto;
+        overflow-y: auto; /* 스크롤 활성화 */
         border-bottom: 1px solid #ddd;
+        max-height: 400px; /* 채팅 박스의 최대 높이를 제한 */
       }
       #chat-messages p {
         margin: 0 0 10px;
