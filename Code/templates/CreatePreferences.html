@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>개인 취향 만들기</title>
     <link rel="stylesheet" href="HomePage.css" />
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=0dff67bd8267e5a437996508dae7e7d8&libraries=services"></script>
   </head>
   <body>
     <header>
@@ -29,16 +30,20 @@
           />
         </div>
 
-        <label for="location" style="font-weight: bold">위치 설정</label>
-        <div>
-          <input
-            type="text"
-            id="location"
-            name="location"
-            placeholder="예: 서울"
-            class="input-box"
-            required
-          />
+        <div class="location-search-container">
+          <label for="location" style="font-weight: bold">위치 설정</label>
+          <div class="search-input-container">
+            <input
+              type="text"
+              id="location"
+              name="location"
+              placeholder="검색할 장소를 입력하세요"
+              class="input-box"
+              autocomplete="off"
+              required
+            />
+            <div id="location-search-results" class="search-results"></div>
+          </div>
         </div>
 
         <label for="positive-prompt" style="font-weight: bold">선호 기준</label>
