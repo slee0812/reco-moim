@@ -50,34 +50,6 @@ def get_centroid():
         logging.error(f"Error in get_centroid: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/places")
-def get_places():
-    try:
-        latitude = 37.4842
-        longitude = 126.9293
-
-        # 카카오 API 호출
-        url = "https://dapi.kakao.com/v2/local/search/keyword.json"
-        params = {
-            "query": "음식점",
-            "x": str(longitude),
-            "y": str(latitude),
-            "radius": 5000,
-        }
-        headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
-        response = requests.get(url, headers=headers, params=params)
-
-        if response.status_code == 200:
-            result = response.json()
-            result['centroid'] = {"latitude": latitude, "longitude": longitude}
-            return jsonify(result)
-        else:
-            logging.error(f"Kakao API error: {response.text}")
-            return jsonify({"error": response.text}), response.status_code
-    except Exception as e:
-        logging.error(f"Error in get_places: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
 @app.route("/find-path")
 def find_path():
     try:
