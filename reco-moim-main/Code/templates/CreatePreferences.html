@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>개인 취향 만들기</title>
+    <link rel="stylesheet" href="HomePage.css" />
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=0dff67bd8267e5a437996508dae7e7d8&libraries=services"></script>
+  </head>
+  <body>
+    <header>
+      <div class="header-container">
+        <img src="images/New Logo.png" alt="Reco-moim 로고" class="logo" />
+        <h1>개인 취향 만들기</h1>
+        <p>나만의 취향을 설정하고 맞춤 장소 추천을 받아보세요!</p>
+      </div>
+    </header>
+
+    <main>
+      <form id="preferences-form">
+        <label for="name" style="font-weight: bold">이름</label>
+        <div>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            placeholder="예: 홍길동"
+            class="input-box"
+            required
+          />
+        </div>
+
+        <div class="location-search-container">
+          <label for="location" style="font-weight: bold">위치 설정</label>
+          <div class="search-input-container">
+            <input
+              type="text"
+              id="location"
+              name="location"
+              placeholder="검색할 장소를 입력하세요"
+              class="input-box"
+              autocomplete="off"
+              required
+            />
+            <div id="location-search-results" class="search-results"></div>
+          </div>
+        </div>
+
+        <label for="positive-prompt" style="font-weight: bold">선호 기준</label>
+        <div>
+          <textarea
+            id="positive-prompt"
+            name="positive-prompt"
+            rows="5"
+            style="resize: none; overflow-y: scroll"
+            class="textarea-box"
+            placeholder="예: 조용한 카페, 자연 경관"
+          ></textarea>
+        </div>
+
+        <label for="negative-prompt" style="font-weight: bold">제외 조건</label>
+        <div>
+          <textarea
+            id="negative-prompt"
+            name="negative-prompt"
+            rows="5"
+            style="resize: none; overflow-y: scroll"
+            class="textarea-box"
+            placeholder="예: 붐비는 장소, 시끄러운 환경"
+          ></textarea>
+        </div>
+
+        <div class="actions">
+          <button type="submit">저장하기</button>
+          <button type="reset">초기화</button>
+        </div>
+      </form>
+    </main>
+
+    <footer>
+      <p>© 2024 Reco-moim. 모임 장소 추천 서비스</p>
+    </footer>
+    <script src="CreatePreferences.js"></script>
+  </body>
+</html>
