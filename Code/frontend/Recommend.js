@@ -1,13 +1,30 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1. URL에서 모임 이름 가져오기
+  // 각 기능을 초기화하는 함수 호출
+  await initializeMeetingName();
+  await initializeMeetingDetails();
+  initializeMap();
+  initializeMapControls();
+  loadPlaces();
+  initializeChatHandlers();
+  initializePopupToggle();
+  initializeMeetingInfo();
+});
+
+// 1. URL에서 모임 이름 가져오기 및 모임 이름 표시
+async function initializeMeetingName() {
   const urlParams = new URLSearchParams(window.location.search);
   const meetingName = urlParams.get("meeting_name") || "모임 이름 없음";
 
   // 모임 이름을 왼쪽 상자에 표시
   const meetingNameElement = document.getElementById("meeting-name");
   meetingNameElement.textContent = meetingName;
+}
 
-  // 2. 모임 정보 가져오기 및 저장
+// 2. 모임 정보 가져오기 및 저장
+async function initializeMeetingDetails() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const meetingName = urlParams.get("meeting_name") || "모임 이름 없음";
+
   let meetingDetails = {};
   try {
     const response = await fetch(
@@ -23,9 +40,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Fetch Error:", error);
   }
 
-  // 3. 모임 정보 팝업 표시 기능
+  return meetingDetails; // meetingDetails를 반환하여 다른 함수에서 사용할 수 있게 함
+}
+
+// 3. 모임 정보 팝업 표시 기능
+function initializePopupToggle() {
   let isPopupVisible = false; // 팝업 상태
-  meetingNameElement.addEventListener("click", () => {
+  const meetingNameElement = document.getElementById("meeting-name");
+
+  meetingNameElement.addEventListener("click", async () => {
+    const meetingDetails = await initializeMeetingDetails(); // 모임 정보를 받아옴
+
     if (!isPopupVisible) {
       showPopup(meetingDetails);
       isPopupVisible = true;
@@ -34,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       isPopupVisible = false;
     }
   });
-});
+}
 
 // 팝업 표시 함수
 function showPopup(details) {
@@ -102,15 +127,6 @@ const loadingElement = document.getElementById("loading");
 let map;
 let clusterer;
 let userMarker = null;
-
-// 페이지 초기화
-document.addEventListener("DOMContentLoaded", function () {
-  initializeMeetingInfo();
-  initializeMap();
-  initializeMapControls();
-  loadPlaces();
-  initializeChatHandlers();
-});
 
 // 지도 초기화
 function initializeMap() {
