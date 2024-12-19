@@ -50,64 +50,6 @@ def get_centroid():
         logging.error(f"Error in get_centroid: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/find-path")
-def find_path():
-    try:
-        # URL 파라미터 가져오기
-        sx = request.args.get('sx')
-        sy = request.args.get('sy')
-        ex = request.args.get('ex')
-        ey = request.args.get('ey')
-        
-        # 파라미터 유효성 검사
-        if not all([sx, sy, ex, ey]):
-            return jsonify({"error": "Missing required parameters"}), 400
-
-        # ODsay API 호출
-        url = "https://api.odsay.com/v1/api/searchPubTransPathT"
-        params = {
-            "apiKey": ODSAY_API_KEY,
-            "SX": sx,
-            "SY": sy,
-            "EX": ex,
-            "EY": ey,
-            "SearchType": 0,
-        }
-        
-        response = requests.get(url, params=params)
-        
-        # 디버깅을 위한 로그
-        logging.debug(f"ODsay API request URL: {url}")
-        logging.debug(f"ODsay API parameters: {params}")
-        logging.debug(f"ODsay API response status: {response.status_code}")
-        logging.debug(f"ODsay API response: {response.text[:200]}...")
-
-        if response.status_code == 200:
-            data = response.json()
-            
-            # 응답 데이터 검증
-            if 'result' not in data:
-                return jsonify({"error": "Invalid response from ODsay API"}), 500
-                
-            # 경로가 없는 경우 처리
-            if 'path' not in data['result']:
-                return jsonify({"message": "No routes found"}), 404
-                
-            return jsonify(data)
-        else:
-            error_msg = f"ODsay API error: Status {response.status_code}"
-            logging.error(error_msg)
-            return jsonify({"error": error_msg}), response.status_code
-            
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Network error in find_path: {str(e)}"
-        logging.error(error_msg)
-        return jsonify({"error": error_msg}), 503
-    except Exception as e:
-        error_msg = f"Unexpected error in find_path: {str(e)}"
-        logging.error(error_msg)
-        return jsonify({"error": error_msg}), 500
-
 # 에러 핸들러
 @app.errorhandler(404)
 def not_found_error(error):
