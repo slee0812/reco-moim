@@ -6,6 +6,12 @@ const locationInput = document.getElementById('location');
 const searchResults = document.getElementById('location-search-results');
 const preferencesForm = document.getElementById('preferences-form');
 
+// 선택된 장소의 좌표를 저장할 변수
+let selectedLocation = {
+    latitude: null,
+    longitude: null
+};
+
 // 디바운스 타이머
 let debounceTimer;
 
@@ -62,6 +68,11 @@ function displaySearchResults(places) {
         // 결과 항목 클릭 이벤트
         item.addEventListener('click', function() {
             locationInput.value = `${place.place_name} (${place.address_name})`;
+            // 좌표 저장
+            selectedLocation = {
+                latitude: parseFloat(place.y),  // 위도
+                longitude: parseFloat(place.x)  // 경도
+            };
             searchResults.style.display = 'none';
         });
         
@@ -80,6 +91,12 @@ preferencesForm.addEventListener('submit', async function(event) {
     const positivePrompt = document.getElementById('positive-prompt').value.trim();
     const negativePrompt = document.getElementById('negative-prompt').value.trim();
 
+    // 위치가 선택되었는지 확인
+    if (!selectedLocation.latitude || !selectedLocation.longitude) {
+        alert('위치를 검색 결과에서 선택해주세요.');
+        return;
+    }
+
     try {
         const response = await fetch('/save-preference', {
             method: 'POST',
@@ -89,6 +106,8 @@ preferencesForm.addEventListener('submit', async function(event) {
             body: JSON.stringify({
                 name: name,
                 location: location,
+                latitude: selectedLocation.latitude,
+                longitude: selectedLocation.longitude,
                 positivePrompt: positivePrompt,
                 negativePrompt: negativePrompt,
             }),
@@ -111,6 +130,11 @@ preferencesForm.addEventListener('submit', async function(event) {
 // 폼 초기화 이벤트 처리
 preferencesForm.addEventListener('reset', function() {
     searchResults.style.display = 'none';
+    // 선택된 위치 초기화
+    selectedLocation = {
+        latitude: null,
+        longitude: null
+    };
     alert('모든 입력이 초기화되었습니다.');
 });
 
@@ -122,6 +146,12 @@ function validateForm() {
     if (!name || !location) {
         return false;
     }
+    
+    // 위치 좌표 확인
+    if (!selectedLocation.latitude || !selectedLocation.longitude) {
+        return false;
+    }
+    
     return true;
 }
 

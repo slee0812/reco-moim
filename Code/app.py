@@ -4,14 +4,14 @@ from maps.FindDestination import calculate_centroid, haversine
 import pandas as pd
 import os
 import json
-import requests  # Add this import
+import requests
 
 app = Flask(__name__, template_folder="templates", static_folder="templates")
 
 # API 키 설정
-KAKAO_API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"  # Kakao REST API 키
-KAKAO_JAVASCRIPT_KEY = "0dff67bd8267e5a437996508dae7e7d8"  # Kakao JavaScript 키
-ODSAY_API_KEY = "6NGvqhV5Q5n77duoHpFxDfQzFsSoi77quyRJDe9yvl0"  # ODsay API 키
+KAKAO_API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"
+KAKAO_JAVASCRIPT_KEY = "0dff67bd8267e5a437996508dae7e7d8"
+ODSAY_API_KEY = "6NGvqhV5Q5n77duoHpFxDfQzFsSoi77quyRJDe9yvl0"
 
 # 데이터베이스 설정
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///preferences.db"
@@ -23,28 +23,28 @@ class Preference(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     location = db.Column(db.String(120), nullable=False)
+    latitude = db.Column(db.Float, nullable=False)  # 위도 필드 추가
+    longitude = db.Column(db.Float, nullable=False)  # 경도 필드 추가
     positive_prompt = db.Column(db.Text, nullable=True)
     negative_prompt = db.Column(db.Text, nullable=True)
 
 class Moim(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     meeting_name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)  # 설명 필드 추가
+    description = db.Column(db.Text, nullable=False)
     date = db.Column(db.String(50), nullable=False)
     time = db.Column(db.String(50), nullable=False)
-    friends = db.Column(db.Text, nullable=False)  # 친구들의 이름 리스트
-    friend_details = db.Column(db.Text, nullable=False)  # 위치, 선호, 비선호 리스트
+    friends = db.Column(db.Text, nullable=False)
+    friend_details = db.Column(db.Text, nullable=False)
 
 # 애플리케이션 시작 시 DB 생성
 with app.app_context():
     db.create_all()
 
-# 시작 페이지: HomePage.html
 @app.route("/")
 def home():
     return render_template("HomePage.html")
 
-# CreatePreferences.html 렌더링
 @app.route("/create-preferences")
 def create_preferences():
     return render_template("CreatePreferences.html")
@@ -55,47 +55,68 @@ def save_preference():
     data = request.json
     name = data.get("name")
     location = data.get("location")
+    latitude = data.get("latitude")  # 위도 데이터 받기
+    longitude = data.get("longitude")  # 경도 데이터 받기
     positive_prompt = data.get("positivePrompt")
     negative_prompt = data.get("negativePrompt")
 
-    # 중복 이름 확인 및 업데이트
-    existing_record = Preference.query.filter_by(name=name).first()
-    if existing_record:
-        existing_record.location = location
-        existing_record.positive_prompt = positive_prompt
-        existing_record.negative_prompt = negative_prompt
-        message = "정보가 변경되었습니다."
-    else:
-        # 새로운 데이터 저장
-        new_pref = Preference(
-            name=name,
-            location=location,
-            positive_prompt=positive_prompt,
-            negative_prompt=negative_prompt,
-        )
-        db.session.add(new_pref)
-        message = "데이터가 저장되었습니다."
+    # 필수 필드 검증
+    if not all([name, location, latitude, longitude]):
+        return jsonify({
+            "status": "error",
+            "message": "필수 정보가 누락되었습니다."
+        }), 400
 
-    db.session.commit()
+    try:
+        # 중복 이름 확인 및 업데이트
+        existing_record = Preference.query.filter_by(name=name).first()
+        if existing_record:
+            existing_record.location = location
+            existing_record.latitude = latitude
+            existing_record.longitude = longitude
+            existing_record.positive_prompt = positive_prompt
+            existing_record.negative_prompt = negative_prompt
+            message = "정보가 변경되었습니다."
+        else:
+            # 새로운 데이터 저장
+            new_pref = Preference(
+                name=name,
+                location=location,
+                latitude=latitude,
+                longitude=longitude,
+                positive_prompt=positive_prompt,
+                negative_prompt=negative_prompt,
+            )
+            db.session.add(new_pref)
+            message = "데이터가 저장되었습니다."
 
-    # DB 테이블 내용 출력
-    print("\n현재 저장된 Preferences 테이블:")
-    preferences = Preference.query.all()
-    for pref in preferences:
-        print(f"ID: {pref.id}, 이름: {pref.name}, 위치: {pref.location}, 선호 기준: {pref.positive_prompt}, 제외 조건: {pref.negative_prompt}")
-    print("-" * 50)
+        db.session.commit()
 
-    return jsonify({"status": "success", "message": message}), 200
+        # DB 테이블 내용 출력 (디버깅용)
+        print("\n현재 저장된 Preferences 테이블:")
+        preferences = Preference.query.all()
+        for pref in preferences:
+            print(f"ID: {pref.id}, 이름: {pref.name}, 위치: {pref.location}, "
+                  f"위도: {pref.latitude}, 경도: {pref.longitude}, "
+                  f"선호 기준: {pref.positive_prompt}, 제외 조건: {pref.negative_prompt}")
+        print("-" * 50)
 
+        return jsonify({"status": "success", "message": message}), 200
 
-# 정적 파일 경로 설정 (CSS, JS 등)
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving preference: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": "서버 오류가 발생했습니다."
+        }), 500
+
 @app.route("/<path:filename>")
 def static_files(filename):
     return send_from_directory(app.static_folder, filename)
 
 @app.route("/get-friends-names", methods=["GET"])
 def get_friend_names():
-    """친구 이름 목록 반환"""
     try:
         friends = Preference.query.with_entities(Preference.name).all()
         friend_names = [friend.name for friend in friends]
@@ -104,15 +125,13 @@ def get_friend_names():
         print("Error:", e)
         return jsonify({"error": "친구 이름을 불러오는 중 오류가 발생했습니다."}), 500
 
-
 @app.route("/get-meetings", methods=["GET"])
 def get_meetings():
-    """저장된 모임 데이터를 반환"""
     try:
         meetings = Moim.query.all()
         result = [
             {
-                "id": meeting.id,  # 모임 ID 추가
+                "id": meeting.id,
                 "name": meeting.meeting_name,
                 "description": meeting.description,
                 "date": meeting.date,
@@ -126,10 +145,8 @@ def get_meetings():
         print("모임 데이터 불러오기 실패:", e)
         return jsonify({"error": "모임 데이터를 가져오는 중 오류가 발생했습니다."}), 500
 
-
 @app.route("/create-meeting", methods=["POST"])
 def create_meeting():
-    """모임 정보를 저장하는 라우트"""
     try:
         data = request.json
         meeting_name = data.get("name")
@@ -144,23 +161,22 @@ def create_meeting():
         if not selected_friends:
             return jsonify({"status": "error", "message": "친구를 선택해주세요."}), 400
 
-        # 모임 중복 확인
         existing_meeting = Moim.query.filter_by(meeting_name=meeting_name, date=date, time=time).first()
         if existing_meeting:
             return jsonify({"status": "duplicate", "message": "이미 같은 이름과 시간의 모임이 존재합니다."}), 200
 
-        # 선택된 친구들의 세부 정보 가져오기
         friends = Preference.query.filter(Preference.name.in_(selected_friends)).all()
         if not friends:
             return jsonify({"status": "error", "message": "선택된 친구의 정보가 없습니다."}), 404
 
         friend_details = {
             "location": [friend.location for friend in friends if friend.location],
+            "coordinates": [{"latitude": friend.latitude, "longitude": friend.longitude} 
+                          for friend in friends],  # 좌표 정보 추가
             "positive_prompt": [friend.positive_prompt for friend in friends if friend.positive_prompt],
             "negative_prompt": [friend.negative_prompt for friend in friends if friend.negative_prompt],
         }
 
-        # 데이터 저장
         new_moin = Moim(
             meeting_name=meeting_name,
             description=description,
@@ -177,7 +193,7 @@ def create_meeting():
         print("모임 저장 실패:", e)
         db.session.rollback()
         return jsonify({"status": "error", "message": "서버 오류가 발생했습니다."}), 500
-    
+
 
 @app.route("/delete-meeting/<int:meeting_id>", methods=["DELETE"])
 def delete_meeting(meeting_id):
