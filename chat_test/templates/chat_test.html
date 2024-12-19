@@ -1,1 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Azure OpenAI Chat</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f9;
+      }
+      #chat-container {
+        width: 90%;
+        max-width: 600px;
+        background: #ffffff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      #chat-messages {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+        border-bottom: 1px solid #ddd;
+      }
+      #chat-messages p {
+        margin: 0 0 10px;
+        line-height: 1.5;
+      }
+      #chat-messages p strong {
+        display: block;
+        margin-bottom: 5px;
+      }
+      #chat-messages .user {
+        text-align: right;
+        color: #007bff;
+      }
+      #chat-messages .ai {
+        text-align: left;
+        color: #333;
+      }
+      .ai-response {
+        background-color: #f0f8ff;
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .response-content {
+        margin-top: 5px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .citations {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #555;
+      }
+      .citations ul {
+        margin: 0;
+        padding-left: 15px;
+      }
+      .citations li {
+        margin-bottom: 5px;
+      }
+      #chat-input {
+        display: flex;
+        padding: 8px;
+        background: #f4f4f9;
+      }
+      #user-input {
+        flex: 1;
+        padding: 8px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        max-height: 120px;
+        overflow-y: auto;
+        resize: none;
+      }
+      #send-button {
+        margin-left: 8px;
+        padding: 8px 16px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #send-button:hover {
+        background-color: #0056b3;
+      }
+      #send-button:disabled {
+        background-color: #aaa;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chat-container">
+      <div id="chat-messages"></div>
+      <div id="chat-input">
+        <textarea
+          id="user-input"
+          placeholder="메시지를 입력하세요..."
+          oninput="toggleSendButton(); adjustInputHeight();"
+        ></textarea>
+        <button id="send-button" onclick="sendMessage()" disabled>전송</button>
+      </div>
+    </div>
 
+    <script>
+      function adjustInputHeight() {
+        const input = document.getElementById("user-input");
+        input.style.height = "auto";
+        input.style.height = input.scrollHeight + "px";
+      }
+
+      function toggleSendButton() {
+        const userInput = document.getElementById("user-input").value.trim();
+        document.getElementById("send-button").disabled = !userInput;
+      }
+
+      function sendMessage() {
+        const userMessage = $("#user-input").val().trim();
+        if (!userMessage) return;
+
+        $("#chat-messages").append(
+          '<p class="user"><strong>You:</strong> ' + userMessage + "</p>"
+        );
+        $("#user-input").val("");
+        adjustInputHeight();
+        toggleSendButton();
+
+        const chatMessages = document.getElementById("chat-messages");
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        $.ajax({
+          url: "/chat",
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ message: userMessage }),
+          success: function (response) {
+            let aiResponseHtml = `
+          <div class="ai-response">
+            <strong>AI:</strong>
+            <div class="response-content">
+        `;
+
+            const responseLines = response.response.split("\n");
+            responseLines.forEach(function (line) {
+              if (line.trim()) {
+                aiResponseHtml += `<p>${line.trim()}</p>`;
+              }
+            });
+
+            aiResponseHtml += "</div></div>";
+
+            if (response.citations && response.citations.length > 0) {
+              aiResponseHtml +=
+                '<div class="citations"><strong>인용:</strong><ul>';
+              response.citations.forEach(function (citation) {
+                aiResponseHtml +=
+                  "<li>" +
+                  citation.content +
+                  " (출처: " +
+                  citation.source +
+                  ")</li>";
+              });
+              aiResponseHtml += "</ul></div>";
+            }
+
+            aiResponseHtml += "</div>";
+            $("#chat-messages").append(aiResponseHtml);
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          },
+          error: function () {
+            $("#chat-messages").append(
+              '<p class="ai"><strong>AI:</strong> 응답을 가져오는 데 실패했습니다. 다시 시도해주세요.</p>'
+            );
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          },
+        });
+      }
+    </script>
+  </body>
+</html>
