@@ -4,6 +4,7 @@ import pandas as pd
 import math
 
 KAKAO_API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"
+ODSAY_API_KEY = "6NGvqhV5Q5n77duoHpFxDfQzFsSoi77quyRJDe9yvl0"  # ODsay API 키
 
 # Step 1: 중심점 계산
 def calculate_centroid(locations):
@@ -28,19 +29,19 @@ def get_nearby_subway_stations(center, radius_m=5000):
 
 # Step 3: 대중교통 소요 시간 계산
 def calculate_travel_time(origin, destinations):
-    url = "https://apis-navi.kakaomobility.com/v1/directions"
-    headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
+    url = "https://api.odsay.com/v1/api/searchPubTransPathT"
     times = []
     for destination in destinations:
         params = {
-            "origin": f"{origin[1]},{origin[0]}",  # 경도, 위도 순서
-            "destination": f"{destination[1]},{destination[0]}",  # 경도, 위도 순서
-            "waypoints": "",  # 경유지 설정 가능
-            "priority": "TRANSIT",  # 대중교통 기준
+            "SX": origin[1],
+            "SY": origin[0],
+            "EX": destination[1],
+            "EY": destination[0],
+            "apiKey": "6NGvqhV5Q5n77duoHpFxDfQzFsSoi77quyRJDe9yvl0"
         }
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, params=params)
         try:
-            time = response.json()["routes"][0]["summary"]["duration"]  # 소요 시간 (초 단위)
+            time = response.json()["result"]["path"][0]["info"]["totalTime"]  # 소요 시간 (분 단위)
             times.append(time)
         except (KeyError, IndexError):
             times.append(float("inf"))  # 접근 불가한 경우 무한대로 설정
@@ -86,31 +87,31 @@ def haversine(lat1, lon1, lat2, lon2):
 
 # 사용 예시
 if __name__ == "__main__":
-    # CSV 파일 읽기
-    data = pd.read_csv('../../Data/maps/subway_stations.csv')
+    # # CSV 파일 읽기
+    # data = pd.read_csv('../../Data/maps/subway_stations.csv')
 
-    # 현재 위치 (위도, 경도)
-    current_lat = 37.4842
-    current_lon = 126.9293
+    # # 현재 위치 (위도, 경도)
+    # current_lat = 37.4842
+    # current_lon = 126.9293
 
-    # '위도'와 '경도'가 숫자 형식인지 확인하고, 결측값 처리
-    data['위도'] = pd.to_numeric(data['위도'], errors='coerce')
-    data['경도'] = pd.to_numeric(data['경도'], errors='coerce')
+    # # '위도'와 '경도'가 숫자 형식인지 확인하고, 결측값 처리
+    # data['위도'] = pd.to_numeric(data['위도'], errors='coerce')
+    # data['경도'] = pd.to_numeric(data['경도'], errors='coerce')
 
-    # 결측값 처리 (NaN이 있는 경우, 예시로 NaN을 0으로 채움)
-    data = data.fillna({'위도': 0, '경도': 0})
+    # # 결측값 처리 (NaN이 있는 경우, 예시로 NaN을 0으로 채움)
+    # data = data.fillna({'위도': 0, '경도': 0})
 
-    # 각 전철역과 현재 위치 사이의 거리 계산
-    data['거리'] = data.apply(lambda row: haversine(current_lat, current_lon, row['위도'], row['경도']), axis=1)
+    # # 각 전철역과 현재 위치 사이의 거리 계산
+    # data['거리'] = data.apply(lambda row: haversine(current_lat, current_lon, row['위도'], row['경도']), axis=1)
 
-    # 가장 가까운 역 찾기
-    nearest_station = data.loc[data['거리'].idxmin()]
+    # # 가장 가까운 역 찾기
+    # nearest_station = data.loc[data['거리'].idxmin()]
 
-    # 결과 출력
-    print(f"가장 가까운 역: {nearest_station['역사명']}")
-    print(f"호선: {nearest_station['호선']}")
-    print(f"위도: {nearest_station['위도']}, 경도: {nearest_station['경도']}")
-    print(f"거리: {nearest_station['거리']:.2f} km")
+    # # 결과 출력
+    # print(f"가장 가까운 역: {nearest_station['역사명']}")
+    # print(f"호선: {nearest_station['호선']}")
+    # print(f"위도: {nearest_station['위도']}, 경도: {nearest_station['경도']}")
+    # print(f"거리: {nearest_station['거리']:.2f} km")
 
     # Step 1: 출발지 설정
     # origins = [(37.5082, 126.8916), (37.4855, 126.9019)]  # 신도림, 구로디지털단지

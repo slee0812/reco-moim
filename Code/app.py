@@ -11,7 +11,7 @@ app = Flask(__name__, template_folder="frontend", static_folder="frontend")
 # API 키 설정
 KAKAO_API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"  # Kakao REST API 키
 KAKAO_JAVASCRIPT_KEY = "0dff67bd8267e5a437996508dae7e7d8"  # Kakao JavaScript 키
-ODSAY_API_KEY = "9Ref0yCZ6ETJkTnNNqtpuw"  # ODsay API 키
+ODSAY_API_KEY = "6NGvqhV5Q5n77duoHpFxDfQzFsSoi77quyRJDe9yvl0"  # ODsay API 키
 
 # 데이터베이스 설정
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///preferences.db"
