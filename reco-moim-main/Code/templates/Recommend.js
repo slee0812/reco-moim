@@ -23,8 +23,16 @@ function sendMessage() {
     contentType: "application/json",
     data: JSON.stringify({ message: userMessage }),
     success: function (response) {
+      // AI 응답을 줄바꿈으로 분리
+      var formattedResponse = response.response
+        .split("\n")
+        .map(function (line) {
+          return "<p>" + line + "</p>";
+        })
+        .join("");
+
       $("#chat-messages").append(
-        "<p><strong>AI:</strong> " + response.response + "</p>"
+        "<p><strong>AI:</strong></p>" + formattedResponse
       );
 
       // 인용 정보 표시
@@ -305,3 +313,4 @@ if (memberCountInput) {
     if (this.value < 2) this.value = 2;
   });
 }
+
