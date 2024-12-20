@@ -11,28 +11,33 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function sendMessage() {
-  var userMessage = $('#user-input').val();
-  $('#chat-messages').append('<p><strong>You:</strong> ' + userMessage + '</p>');
-  $('#user-input').val('');
+  var userMessage = $("#user-input").val();
+  $("#chat-messages").append(
+    "<p><strong>You:</strong> " + userMessage + "</p>"
+  );
+  $("#user-input").val("");
 
   $.ajax({
-    url: '/chat',
-    method: 'POST',
-    contentType: 'application/json',
-    data: JSON.stringify({message: userMessage}),
-    success: function(response) {
-      $('#chat-messages').append('<p><strong>AI:</strong> ' + response.response + '</p>');
+    url: "/chat",
+    method: "POST",
+    contentType: "application/json",
+    data: JSON.stringify({ message: userMessage }),
+    success: function (response) {
+      $("#chat-messages").append(
+        "<p><strong>AI:</strong> " + response.response + "</p>"
+      );
 
       // 인용 정보 표시
       if (response.citations && response.citations.length > 0) {
-        var citationsHtml = '<p><strong>인용:</strong></p><ul>';
-        response.citations.forEach(function(citation) {
-          citationsHtml += '<li>' + citation.content + ' (출처: ' + citation.source + ')</li>';
+        var citationsHtml = "<p><strong>인용:</strong></p><ul>";
+        response.citations.forEach(function (citation) {
+          citationsHtml +=
+            "<li>" + citation.content + " (출처: " + citation.source + ")</li>";
         });
-        citationsHtml += '</ul>';
-        $('#chat-messages').append(citationsHtml);
+        citationsHtml += "</ul>";
+        $("#chat-messages").append(citationsHtml);
       }
-    }
+    },
   });
 }
 
@@ -279,7 +284,6 @@ async function loadPlaces() {
     hideLoading();
   }
 }
-
 
 // 로딩 표시 함수
 function showLoading() {
