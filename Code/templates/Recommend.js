@@ -10,6 +10,45 @@ document.addEventListener("DOMContentLoaded", async () => {
   initializeMeetingInfo();
 });
 
+function sendMessage() {
+  var userMessage = $("#user-input").val();
+  $("#chat-messages").append(
+    "<p><strong>You:</strong> " + userMessage + "</p>"
+  );
+  $("#user-input").val("");
+
+  $.ajax({
+    url: "/chat",
+    method: "POST",
+    contentType: "application/json",
+    data: JSON.stringify({ message: userMessage }),
+    success: function (response) {
+      // AI 응답을 줄바꿈으로 분리
+      var formattedResponse = response.response
+        .split("\n")
+        .map(function (line) {
+          return "<p>" + line + "</p>";
+        })
+        .join("");
+
+      $("#chat-messages").append(
+        "<p><strong>AI:</strong></p>" + formattedResponse
+      );
+
+      // 인용 정보 표시
+      if (response.citations && response.citations.length > 0) {
+        var citationsHtml = "<p><strong>인용:</strong></p><ul>";
+        response.citations.forEach(function (citation) {
+          citationsHtml +=
+            "<li>" + citation.content + " (출처: " + citation.source + ")</li>";
+        });
+        citationsHtml += "</ul>";
+        $("#chat-messages").append(citationsHtml);
+      }
+    },
+  });
+}
+
 // 1. URL에서 모임 이름 가져오기 및 모임 이름 표시
 async function initializeMeetingName() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -254,34 +293,6 @@ async function loadPlaces() {
   }
 }
 
-// 채팅 핸들러 초기화
-function initializeChatHandlers() {
-  sendButton.addEventListener("click", sendMessage);
-  messageInput.addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-      sendMessage();
-    }
-  });
-}
-
-// 메시지 전송
-function sendMessage() {
-  const message = messageInput.value.trim();
-  if (message) {
-    addMessage(message);
-    messageInput.value = "";
-  }
-}
-
-// 메시지 추가
-function addMessage(message) {
-  const messageElement = document.createElement("div");
-  messageElement.className = "chat-message";
-  messageElement.textContent = message;
-  chatMessages.appendChild(messageElement);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
 // 로딩 표시 함수
 function showLoading() {
   if (loadingElement) {
@@ -302,3 +313,4 @@ if (memberCountInput) {
     if (this.value < 2) this.value = 2;
   });
 }
+
