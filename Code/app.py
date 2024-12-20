@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from maps.FindDestination import calculate_centroid, haversine
+from maps.FindDestination import calculate_centroid, find_optimal_station, get_nearby_subway_stations, haversine
 import pandas as pd
 import os
 import json
@@ -270,12 +270,46 @@ def get_places():
     except Exception as e:
         print(f"Error in get_places: {str(e)}")  # Changed logging to print
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/optimal-station', methods=['POST'])
+def optimal_station():
+    try:
+        # 요청 데이터 처리
+        data = request.json
+        print("Received data:", data)  # 요청 데이터 출력
+        origins = data.get('origins', [])
+        radius_m = data.get('radius', 5000)
+
+        # 예시 함수 호출 (미리 구현된 함수가 있어야 작동)
+        centroid = calculate_centroid(origins)  
+        subway_stations = get_nearby_subway_stations(centroid, radius_m)
+
+        if not subway_stations:
+            return jsonify({"error": "No subway stations found within the radius"}), 404
+
+        result = find_optimal_station(origins, subway_stations)
+
+        return jsonify({
+            "centroid": {"latitude": centroid['latitude'], "longitude": centroid['longitude']},
+            "optimal_station_by_total": result["optimal_by_total"],
+            "optimal_station_by_std_dev": result["optimal_by_std_dev"],
+            "details": result["details"],
+        })
+    except Exception as e:
+        # 에러 메시지를 터미널에 출력
+        print("Error occurred:", str(e))
+
+        # Flask 로거에 에러 메시지 추가
+        app.logger.error(f"Error occurred: {str(e)}")
+
+        return jsonify({"error": str(e)}), 500
+
 
 from urllib.parse import unquote
 
 @app.route("/get-meeting-details/<path:meeting_name>", methods=["GET"])
 def get_meeting_details(meeting_name):
-    """모임 이름으��� 모임 데이터를 가져오는 API"""
+    """모임 이름으로 모임 데이터를 가져오는 API"""
     try:
         decoded_name = unquote(meeting_name)  # URL 디코딩 처리
         meeting = Moim.query.filter_by(meeting_name=decoded_name).first()
