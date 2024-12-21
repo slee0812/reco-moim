@@ -4,11 +4,17 @@ from maps.FindDestination import calculate_centroid, find_optimal_station, get_n
 import pandas as pd
 import os
 import json
-import requests
-
-#.
-
+import requests  # Add this import
+from openai import AzureOpenAI
 app = Flask(__name__, template_folder="templates", static_folder="templates")
+
+search_endpoint = "https://team6service.search.windows.net"
+search_key = "6SpnKI68OU13s1mCRvfL2XaKNqEwIJjgAzmvbLmrB9AzSeCaYcUP"
+client = AzureOpenAI(
+    azure_endpoint=("https://recomo-openai.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview"),
+    api_key=("2kt0epiqWh6zIwteoaMjEuto3624Q0LP1IBgEGKeSIKW2QOeNBKLJQQJ99ALACHYHv6XJ3w3AAABACOG9aZt"),
+    api_version="2024-02-01"
+)
 
 # API 키 설정
 KAKAO_API_KEY = "4f040348a11373f7f6d1cdae6778fd0f"
@@ -464,6 +470,140 @@ def get_preference(name):
 
 
 
+
+
+# 로그인 기능을 위한 코드
+
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    name = data.get("name")
+    input_password = data.get("password")
+
+    if not name or not input_password:
+        return jsonify({"status": "error", "message": "이름과 비밀번호를 입력하세요."}), 400
+
+    user = Preference.query.filter_by(name=name).first()
+
+    if user:
+        if user.password == input_password:
+            return jsonify({"status": "success", "message": f"'{name}'님 환영합니다."}), 200
+        else:
+            return jsonify({"status": "error", "message": "비밀번호가 잘못되었습니다."}), 401
+    else:
+        # 새로운 사용자 추가
+        new_user = Preference(name=name, password=input_password, location="", latitude=0, longitude=0)
+        db.session.add(new_user)
+        db.session.commit()
+
+        # DB 내용 출력
+        preferences = Preference.query.all()
+        print("\n현재 DB 상태:")
+        for pref in preferences:
+            print(f"ID: {pref.id}, 이름: {pref.name}, 비밀번호: {pref.password}, 위치: {pref.location}")
+        print("-" * 50)
+
+        return jsonify({"status": "success", "message": f"'{name}'님 환영합니다."}), 201
+
+
+@app.route("/get-preference/<name>", methods=["GET"])
+def get_preference(name):
+    try:
+        user = Preference.query.filter_by(name=name).first()
+        if not user:
+            return jsonify({"status": "error", "message": "사용자를 찾을 수 없습니다."}), 404
+
+        return jsonify({
+            "status": "success",
+            "data": {
+                "name": user.name,
+                "location": user.location,
+                "positive_prompt": user.positive_prompt,
+                "negative_prompt": user.negative_prompt,
+            }
+        }), 200
+    except Exception as e:
+        print(f"사용자 정보 가져오기 실패: {e}")
+        return jsonify({"status": "error", "message": "서버 오류가 발생했습니다."}), 500
+
+
+
+
+
+
+with open('ChatSetup_final.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+system_prompt = config['systemPrompt']
+chat_parameters = config['chatParameters']
+
+@app.route('/')
+def index():
+    return render_template('chat_test.html')
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    user_message = request.json['message']
+
+    extra_body = {
+        "data_sources": [{
+            "type": "azure_search",
+            "parameters": {
+                "endpoint": f"{search_endpoint}",
+                "index_name": "place-filtered-index2",
+                "semantic_configuration": "place-filtered-semantic2",
+                "query_type": "semantic",
+                "fields_mapping": {},
+                "in_scope": True,
+                "role_information": system_prompt,
+                "filter": None,
+                "strictness": 3,
+                "top_n_documents": 5,
+                "authentication": {
+                    "type": "api_key",
+                    "key": f"{search_key}"
+                }
+            }
+        }]
+    }
+
+    response = client.chat.completions.create(
+        model=chat_parameters['deploymentName'],
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message}
+        ],
+        max_tokens=chat_parameters['maxResponseLength'],
+        temperature=chat_parameters['temperature'],
+        top_p=chat_parameters['topProbablities'],
+        frequency_penalty=chat_parameters['frequencyPenalty'],
+        presence_penalty=chat_parameters['presencePenalty'],
+        stop=chat_parameters['stopSequences'],
+        extra_body=extra_body
+    )
+
+    # 응답 텍스트 추출
+    answer_text = response.choices[0].message.content
+
+    # 인용 정보 추출 (안전한 방식으로)
+    citations = []
+    if hasattr(response.choices[0].message, 'context'):
+        context = response.choices[0].message.context
+        if isinstance(context, dict) and 'messages' in context:
+            messages = context['messages']
+            if isinstance(messages, list) and len(messages) > 0:
+                first_message = messages[0]
+                if isinstance(first_message, dict) and 'content' in first_message:
+                    content = first_message['content']
+                    if isinstance(content, dict) and 'citations' in content:
+                        citations = content['citations']
+
+    return jsonify({
+        'response': answer_text,
+        'citations': citations
+    })
 
 if __name__ == "__main__":
     app.run(debug=True, host = '0.0.0.0')

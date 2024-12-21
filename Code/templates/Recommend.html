@@ -10,6 +10,8 @@
     <!-- Kakao Map API -->
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ JAVASCRIPT_KEY }}&libraries=clusterer"></script>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <style>
       body {
         display: flex;
@@ -25,7 +27,7 @@
       #meeting-info-container {
         position: absolute;
         top: 10px;
-        left: 20px; /* 왼쪽으로 이동 */
+        left: 20px;
         background: #e6f7e6;
         border: 2px solid #28a745;
         border-radius: 10px;
@@ -73,9 +75,109 @@
         flex: 6;
         position: relative;
       }
-      .chat-container {
-        flex: 4;
-        width: auto;
+      /* 채팅 컨테이너 */
+      #chat-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 10px;
+        border-radius: 10px;
+        background-color: #f8f9fa;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        font-family: Arial, sans-serif;
+        height: 700px; /* chat-container 크기 고정 */
+      }
+
+      /* 채팅 메시지 영역 */
+      #chat-messages {
+        flex: 1;
+        overflow-y: auto; /* 스크롤 활성화 */
+        padding: 15px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #ffffff;
+        box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
+        font-size: 14px;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      /* 메시지 */
+      .message {
+        display: inline-block;
+        padding: 10px 15px;
+        margin: 10px 0;
+        border-radius: 20px;
+        max-width: 70%;
+        word-wrap: break-word;
+      }
+
+      /* 입력 영역 컨테이너 */
+      #input-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* 입력 필드 */
+      #user-input {
+        flex: 1;
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s ease, height 0.2s ease;
+        resize: none; /* 수동 크기 조정 비활성화 */
+        overflow-y: hidden; /* 스크롤 제거 */
+        max-height: 150px; /* 최대 높이 설정 */
+        line-height: 1.5;
+        word-break: break-word;
+        white-space: pre-wrap; /* 줄바꿈 허용 */
+      }
+
+      #user-input:focus {
+        border-color: #007bff;
+      }
+
+      /* 전송 버튼 */
+      button {
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background-color: #007bff;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      /* 스크롤바 스타일 */
+      #chat-messages::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      #chat-messages::-webkit-scrollbar-thumb {
+        background-color: #ccc;
+        border-radius: 10px;
+      }
+
+      #chat-messages::-webkit-scrollbar-track {
+        background-color: #f8f9fa;
       }
     </style>
   </head>
@@ -88,20 +190,26 @@
 
     <main id="main-container">
       <div id="map"></div>
-      <div class="chat-container">
-        <div class="chat-messages">
-          <!-- 채팅 메시지들이 여기에 추가됩니다 -->
-        </div>
-        <div class="chat-input">
-          <input
-            type="text"
-            id="message-input"
+      <div id="chat-container">
+        <div id="chat-messages"></div>
+        <div id="input-container">
+          <textarea
+            id="user-input"
             placeholder="메시지를 입력하세요..."
-          />
-          <button id="send-button">전송</button>
+            rows="1"
+          ></textarea>
+          <button onclick="sendMessage()">⮞</button>
         </div>
       </div>
     </main>
+    <script>
+      const userInput = document.getElementById("user-input");
+
+      userInput.addEventListener("input", function () {
+        this.style.height = "auto"; // 높이를 초기화
+        this.style.height = this.scrollHeight + "px"; // 내용에 맞게 높이 조정
+      });
+    </script>
 
     <!-- JavaScript 파일 경로 -->
     <script src="Recommend.js"></script>
