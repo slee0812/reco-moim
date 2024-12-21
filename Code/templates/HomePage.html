@@ -86,6 +86,26 @@
         </div>
       </section>
 
+      <section id="login-section">
+        <form id="login-form">
+          <label for="name-input">이름:</label>
+          <input type="text" id="name-input" name="name" placeholder="이름을 입력하세요" required />
+          
+          <label for="password-input">비밀번호 (4자리):</label>
+          <input type="password" id="password-input" name="password" pattern="\d{4}" placeholder="비밀번호를 입력하세요" required />
+      
+          <button type="submit">로그인</button>
+        </form>
+      
+        <!-- 환영 메시지 및 로그아웃 버튼 -->
+        <div id="welcome-section" style="display: none;">
+          <span id="welcome-message"></span>
+          <button id="logout-button" style="margin-left: 10px;">로그아웃</button>
+        </div>
+      </section>
+      
+        
+
       <section class="actions">
         <button id="create-preferences-card" class="disabled">
           개인 취향 카드 만들기

@@ -160,3 +160,32 @@ function handleError(error) {
     console.error('Error:', error);
     alert('오류가 발생했습니다. 다시 시도해주세요.');
 }
+
+document.addEventListener("DOMContentLoaded", async function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const loggedInUserName = urlParams.get("name");
+  
+    if (loggedInUserName) {
+      try {
+        const response = await fetch(`/get-preference/${encodeURIComponent(loggedInUserName)}`);
+        const result = await response.json();
+  
+        if (response.ok && result.status === "success") {
+          const { name, location, positive_prompt, negative_prompt } = result.data;
+  
+          // 입력 필드에 데이터 채우기
+          document.getElementById("name").value = name || "";
+          document.getElementById("location").value = location || "";
+          document.getElementById("positive-prompt").value = positive_prompt || "";
+          document.getElementById("negative-prompt").value = negative_prompt || "";
+        } else {
+          alert("사용자 정보를 가져오는 데 실패했습니다.");
+        }
+      } catch (error) {
+        console.error("사용자 정보 로드 실패:", error);
+      }
+    } else {
+      alert("URL에 이름 정보가 없습니다.");
+    }
+  });
+  

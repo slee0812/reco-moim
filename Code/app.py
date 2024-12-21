@@ -22,6 +22,7 @@ db = SQLAlchemy(app)
 class Preference(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(4), nullable=False)  # 비밀번호 필드 추가
     location = db.Column(db.String(120), nullable=False)
     latitude = db.Column(db.Float, nullable=False)  # 위도 필드 추가
     longitude = db.Column(db.Float, nullable=False)  # 경도 필드 추가
@@ -387,5 +388,68 @@ def find_path():
         return jsonify({"error": error_msg}), 500
 
 
+
+# 로그인 기능을 위한 코드
+
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    name = data.get("name")
+    input_password = data.get("password")
+
+    if not name or not input_password:
+        return jsonify({"status": "error", "message": "이름과 비밀번호를 입력하세요."}), 400
+
+    user = Preference.query.filter_by(name=name).first()
+
+    if user:
+        if user.password == input_password:
+            return jsonify({"status": "success", "message": f"'{name}'님 환영합니다."}), 200
+        else:
+            return jsonify({"status": "error", "message": "비밀번호가 잘못되었습니다."}), 401
+    else:
+        # 새로운 사용자 추가
+        new_user = Preference(name=name, password=input_password, location="", latitude=0, longitude=0)
+        db.session.add(new_user)
+        db.session.commit()
+
+        # DB 내용 출력
+        preferences = Preference.query.all()
+        print("\n현재 DB 상태:")
+        for pref in preferences:
+            print(f"ID: {pref.id}, 이름: {pref.name}, 비밀번호: {pref.password}, 위치: {pref.location}")
+        print("-" * 50)
+
+        return jsonify({"status": "success", "message": f"'{name}'님 환영합니다."}), 201
+
+
+@app.route("/get-preference/<name>", methods=["GET"])
+def get_preference(name):
+    try:
+        user = Preference.query.filter_by(name=name).first()
+        if not user:
+            return jsonify({"status": "error", "message": "사용자를 찾을 수 없습니다."}), 404
+
+        return jsonify({
+            "status": "success",
+            "data": {
+                "name": user.name,
+                "location": user.location,
+                "positive_prompt": user.positive_prompt,
+                "negative_prompt": user.negative_prompt,
+            }
+        }), 200
+    except Exception as e:
+        print(f"사용자 정보 가져오기 실패: {e}")
+        return jsonify({"status": "error", "message": "서버 오류가 발생했습니다."}), 500
+
+
+
+
+
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host = '0.0.0.0')

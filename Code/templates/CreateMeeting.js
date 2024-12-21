@@ -74,9 +74,19 @@ function resetForm() {
   selectedFriendNames = [];
 }
 
-// 서버에서 저장된 모임 데이터 불러오기 및 화면에 표시
+// 서버에서 저장된 모임 데이터 불러오기 및 화면에 표시// 서버에서 저장된 모임 데이터 불러오기 및 화면에 표시
 async function fetchAndDisplayMeetings() {
   try {
+    // URL에서 로그인된 사용자 이름 가져오기
+    const urlParams = new URLSearchParams(window.location.search);
+    const loggedInUserName = urlParams.get("name");
+
+    if (!loggedInUserName) {
+      alert("로그인된 사용자 정보가 없습니다.");
+      return;
+    }
+
+    // 서버에서 모든 모임 데이터 가져오기
     const response = await fetch("/get-meetings");
     if (!response.ok) throw new Error("모임 데이터를 가져오지 못했습니다.");
 
@@ -84,10 +94,15 @@ async function fetchAndDisplayMeetings() {
     const resultsContainer = document.getElementById("results-container");
     resultsContainer.innerHTML = ""; // 기존 내용 초기화
 
-    if (meetings.length === 0) {
-      resultsContainer.innerHTML = "<div>저장된 모임이 없습니다.</div>";
+    // 로그인된 사용자가 포함된 모임 필터링
+    const filteredMeetings = meetings.filter((meeting) =>
+      meeting.friends.includes(loggedInUserName)
+    );
+
+    if (filteredMeetings.length === 0) {
+      resultsContainer.innerHTML = "<div>참여한 모임이 없습니다.</div>";
     } else {
-      meetings.forEach((meeting) => {
+      filteredMeetings.forEach((meeting) => {
         const meetingBox = document.createElement("div");
         meetingBox.className = "meeting-box";
 
