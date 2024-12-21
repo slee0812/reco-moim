@@ -60,7 +60,17 @@ async function initializeMeetingName() {
 }
 
 // 2. 모임 정보 가져오기 및 저장
+let lastFetchTime = null;
+const CACHE_LIFETIME = 60 * 60 * 1000; // 1시간
+
 async function initializeMeetingDetails() {
+  const currentTime = new Date().getTime();
+
+  // 마지막 데이터 가져온 시간이 1시간 이내이면 캐시된 데이터를 사용
+  if (lastFetchTime && currentTime - lastFetchTime < CACHE_LIFETIME) {
+    return cachedMeetingDetails;
+  }
+
   const urlParams = new URLSearchParams(window.location.search);
   const meetingName = urlParams.get("meeting_name") || "모임 이름 없음";
 
@@ -71,6 +81,8 @@ async function initializeMeetingDetails() {
     );
     if (response.ok) {
       meetingDetails = await response.json();
+      cachedMeetingDetails = meetingDetails; // 캐시 저장
+      lastFetchTime = currentTime; // 마지막 호출 시간 갱신
       console.log("Meeting Details:", meetingDetails);
     } else {
       console.error("Error fetching meeting details");
@@ -78,8 +90,7 @@ async function initializeMeetingDetails() {
   } catch (error) {
     console.error("Fetch Error:", error);
   }
-
-  return meetingDetails; // meetingDetails를 반환하여 다른 함수에서 사용할 수 있게 함
+  return meetingDetails;
 }
 
 // 3. 모임 정보 팝업 표시 기능
@@ -313,4 +324,3 @@ if (memberCountInput) {
     if (this.value < 2) this.value = 2;
   });
 }
-
