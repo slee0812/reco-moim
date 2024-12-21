@@ -442,7 +442,7 @@ def login():
             print(f"ID: {pref.id}, 이름: {pref.name}, 비밀번호: {pref.password}, 위치: {pref.location}")
         print("-" * 50)
 
-        return jsonify({"status": "success", "message": f"'{name}'님 환영합니다."}), 201
+        return jsonify({"status": "success", "message": f"'{name}'님 회원가입 되셨습니다."}), 201
 
 
 @app.route("/get-preference/<name>", methods=["GET"])
@@ -540,6 +540,26 @@ def chat():
         'response': answer_text,
         'citations': citations
     })
+
+@app.route("/popup-info/<path:meeting_name>", methods=["GET"])
+def popup_info(meeting_name):
+    """팝업에서 참고할 모임 정보 라우트"""
+    try:
+        decoded_name = unquote(meeting_name)
+        meeting = Moim.query.filter_by(meeting_name=decoded_name).first()
+        if not meeting:
+            return jsonify({"error": "해당 모임을 찾을 수 없습니다."}), 404
+
+        return jsonify({
+            "name": meeting.meeting_name,
+            "description": meeting.description,
+            "date": meeting.date,
+            "time": meeting.time,
+            "friends": json.loads(meeting.friends),
+        }), 200
+    except Exception as e:
+        print("Error in popup_info route:", e)
+        return jsonify({"error": "서버 오류가 발생했습니다."}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host = '0.0.0.0')

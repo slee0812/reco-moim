@@ -1,13 +1,55 @@
 document.addEventListener("DOMContentLoaded", async () => {
   // 각 기능을 초기화하는 함수 호출
   await initializeMeetingName();
-  await initializeMeetingDetails();
+  const meetingDetails = await initializeMeetingDetails();
   initializeMap();
   initializeMapControls();
   loadPlaces();
   initializeChatHandlers();
-  initializePopupToggle();
   initializeMeetingInfo();
+
+  const popupOverlay = document.getElementById("meeting-popup");
+  const closePopupBtn = document.getElementById("close-popup-btn");
+  const openPopupBtn = document.getElementById("open-popup-btn");
+  const popupImageContainer = document.getElementById("popup-image-container");
+
+  const currentMeetingName = new URLSearchParams(window.location.search).get("meeting_name");
+
+  openPopupBtn.addEventListener("click", async () => {
+    console.log("버튼이 클릭되었습니다!"); // 클릭 확인용
+    try {
+      if (!currentMeetingName) {
+        alert("모임 이름이 없습니다.");
+        return;
+      }
+      const res = await fetch(`/popup-info/${encodeURIComponent(currentMeetingName)}`);
+      if (!res.ok) {
+        throw new Error("팝업 정보를 가져오는 데 실패했습니다.");
+      }
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+      // 팝업 내부를 채움
+      popupImageContainer.innerHTML = `
+        <p>설명: ${data.description}</p>
+        <p>날짜: ${data.date}</p>
+        <p>시간: ${data.time}</p>
+        <p>친구: ${data.friends.join(", ")}</p>
+      `;
+      // 팝업 표시
+      popupOverlay.style.display = "flex";
+    } catch (error) {
+      console.error(error);
+      alert("오류가 발생했습니다.");
+    }
+  });
+
+  closePopupBtn.addEventListener("click", () => {
+    // 팝업 숨기기
+    popupOverlay.style.display = "none";
+  });
 });
 
 function sendMessage() {
@@ -96,60 +138,8 @@ async function initializeMeetingDetails() {
   }
 
   return meetingDetails;
-  return meetingDetails;
 }
 
-// 3. 모임 정보 팝업 표시 기능
-function initializePopupToggle() {
-  let isPopupVisible = false; // 팝업 상태
-  const meetingNameElement = document.getElementById("meeting-name");
-
-  meetingNameElement.addEventListener("click", async () => {
-    const meetingDetails = await initializeMeetingDetails(); // 모임 정보를 받아옴
-
-    if (!isPopupVisible) {
-      showPopup(meetingDetails);
-      isPopupVisible = true;
-    } else {
-      hidePopup();
-      isPopupVisible = false;
-    }
-  });
-}
-
-// 팝업 표시 함수
-function showPopup(details) {
-  const popup = document.createElement("div");
-  popup.id = "meeting-popup";
-  popup.style.position = "absolute";
-  popup.style.top = "50px";
-  popup.style.left = "20px";
-  popup.style.background = "#ffffff";
-  popup.style.border = "2px solid #28a745";
-  popup.style.borderRadius = "10px";
-  popup.style.padding = "15px";
-  popup.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.3)";
-  popup.style.zIndex = "1100";
-  popup.style.maxWidth = "300px";
-
-  popup.innerHTML = `
-    <h3 style="color:#28a745; text-align:center;">모임 상세 정보</h3>
-    <p><strong>설명:</strong> ${details.description || "정보 없음"}</p>
-    <p><strong>날짜:</strong> ${details.date || "정보 없음"}</p>
-    <p><strong>시간:</strong> ${details.time || "정보 없음"}</p>
-    <p><strong>참여 친구들:</strong> ${
-      details.friends?.join(", ") || "정보 없음"
-    }</p>
-  `;
-
-  document.body.appendChild(popup);
-}
-
-// 팝업 숨기기 함수
-function hidePopup() {
-  const popup = document.getElementById("meeting-popup");
-  if (popup) popup.remove();
-}
 
 // 정성준 수정 파트 종료
 //meetingDetails.friends_details를 사용하여 친구 정보를 가져올 수 있음 나중에 코드를 gpt에 활용용
