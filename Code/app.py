@@ -276,11 +276,9 @@ def optimal_station():
     try:
         # 요청 데이터 처리
         data = request.json
-        print("Received data:", data)  # 요청 데이터 출력
         origins = data.get('origins', [])
         radius_m = data.get('radius', 5000)
 
-        # 예시 함수 호출 (미리 구현된 함수가 있어야 작동)
         centroid = calculate_centroid(origins)  
         subway_stations = get_nearby_subway_stations(centroid, radius_m)
 
@@ -288,11 +286,10 @@ def optimal_station():
             return jsonify({"error": "No subway stations found within the radius"}), 404
 
         result = find_optimal_station(origins, subway_stations)
-
+    
         return jsonify({
             "centroid": {"latitude": centroid['latitude'], "longitude": centroid['longitude']},
-            "optimal_station_by_total": result["optimal_by_total"],
-            "optimal_station_by_std_dev": result["optimal_by_std_dev"],
+            "optimal_station_by_total": result["optimal_station_by_total"],
             "details": result["details"],
         })
     except Exception as e:
@@ -313,16 +310,31 @@ def get_meeting_details(meeting_name):
     try:
         decoded_name = unquote(meeting_name)  # URL 디코딩 처리
         meeting = Moim.query.filter_by(meeting_name=decoded_name).first()
+        friends =json.loads(meeting.friends)
+        friend_details = json.loads(meeting.friend_details)
+
+        coordinates = friend_details.get("coordinates", [])        
+        centroid = calculate_centroid(coordinates)  
+        subway_stations = get_nearby_subway_stations(centroid)
+
+        if not subway_stations:
+            return jsonify({"error": "No subway stations found within the radius"}), 404
+
+        result = find_optimal_station(coordinates, subway_stations)
+        print(result)
+
         if not meeting:
             return jsonify({"error": "모임 정보를 찾을 수 없습니다."}), 404
-
         return jsonify({
             "name": meeting.meeting_name,
             "description": meeting.description,
             "date": meeting.date,
             "time": meeting.time,
-            "friends": json.loads(meeting.friends),
-            "friend_details": json.loads(meeting.friend_details),
+            "friends": friends,
+            "friend_details": friend_details,
+            "centroid": {"latitude": centroid['latitude'], "longitude": centroid['longitude']},
+            "optimal_station_by_total": result["optimal_station_by_total"],
+            "details": result["details"],
         }), 200
     except Exception as e:
         print("Error while fetching meeting details:", e)
