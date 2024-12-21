@@ -6,6 +6,8 @@ import os
 import json
 import requests
 
+#.
+
 app = Flask(__name__, template_folder="templates", static_folder="templates")
 
 # API 키 설정
