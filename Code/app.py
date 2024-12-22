@@ -191,13 +191,21 @@ def create_meeting():
         if not selected_friends:
             return jsonify({"status": "error", "message": "친구를 선택해주세요."}), 400
 
-        existing_meeting = Moim.query.filter_by(meeting_name=meeting_name, date=date, time=time).first()
+        existing_meeting = Moim.query.filter_by(meeting_name=meeting_name).first()
         if existing_meeting:
-            return jsonify({"status": "duplicate", "message": "이미 같은 이름과 시간의 모임이 존재합니다."}), 200
+            return jsonify({"status": "duplicate", "message": "이미 같은 이름의 모임이 존재합니다."}), 200
 
         friends = Preference.query.filter(Preference.name.in_(selected_friends)).all()
         if not friends:
             return jsonify({"status": "error", "message": "선택된 친구의 정보가 없습니다."}), 404
+
+        # 위치 정보 확인
+        missing_locations = [friend.name for friend in friends if not friend.location]
+        if missing_locations:
+            return jsonify({
+                "status": "error",
+                "message": f"다음 친구들의 위치 정보가 없습니다: {', '.join(missing_locations)}"
+            }), 400
 
         friend_details = {
             "location": [friend.location for friend in friends if friend.location],
@@ -444,9 +452,6 @@ with open('ChatSetup_final.json', 'r', encoding='utf-8') as f:
 system_prompt = config['systemPrompt']
 chat_parameters = config['chatParameters']
 
-@app.route('/')
-def index():
-    return render_template('chat_test.html')
 
 @app.route('/chat', methods=['POST'])
 def chat():
