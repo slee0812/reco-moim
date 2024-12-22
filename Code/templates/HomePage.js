@@ -67,6 +67,13 @@ createMeetingButton.addEventListener("click", function () {
   }
 });
 
+// 로그인 폼 위에 메시지 추가
+const loginForm = document.getElementById("login-form");
+const signupMessage = document.createElement("p");
+signupMessage.textContent = "새로운 이름을 입력하면 회원가입 됩니다.";
+signupMessage.style.color = "green"; // 메시지 색상 설정
+signupMessage.style.fontWeight = "bold"; // 메시지 굵게 설정
+loginForm.insertBefore(signupMessage, loginForm.firstChild);
 
 document.getElementById("login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -104,6 +111,11 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
 
       // 개인 취향 카드 만들기 버튼 활성화
       document.getElementById("create-preferences-card").disabled = false;
+
+      // 회원가입 메시지 알림
+      if (response.status === 201) {
+        alert(result.message);
+      }
     } else {
       alert(result.message);
     }

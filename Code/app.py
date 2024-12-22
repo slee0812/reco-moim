@@ -60,6 +60,25 @@ def home():
 def create_preferences():
     return render_template("CreatePreferences.html")
 
+
+@app.route("/get-basic-meeting-info/<path:meeting_name>", methods=["GET"])
+def get_basic_meeting_info(meeting_name):
+    """모임 이름으로 기본 모임 정보를 가져오는 API"""
+    try:
+        decoded_name = unquote(meeting_name)  # URL 디코딩 처리
+        meeting = Moim.query.filter_by(meeting_name=decoded_name).first()
+        if not meeting:
+            return jsonify({"error": "모임 정보를 찾을 수 없습니다."}), 404
+        return jsonify({
+            "description": meeting.description,
+            "date": meeting.date,
+            "time": meeting.time,
+            "friends": json.loads(meeting.friends),
+        }), 200
+    except Exception as e:
+        print("Error while fetching basic meeting info:", e)
+        return jsonify({"error": "서버 오류가 발생했습니다."}), 500
+
 # 취향 데이터 저장 및 DB 내용 출력
 @app.route("/save-preference", methods=["POST"])
 def save_preference():
@@ -403,7 +422,7 @@ def login():
             print(f"ID: {pref.id}, 이름: {pref.name}, 비밀번호: {pref.password}, 위치: {pref.location}")
         print("-" * 50)
 
-        return jsonify({"status": "success", "message": f"'{name}'님 환영합니다."}), 201
+        return jsonify({"status": "success", "message": f"'{name}'님 회원가입 되셨습니다."}), 201
 
 
 @app.route("/get-preference/<name>", methods=["GET"])
@@ -501,6 +520,7 @@ def chat():
         'response': answer_text,
         'citations': citations
     })
+
 
 if __name__ == "__main__":
     app.run(debug=True, host = '0.0.0.0')
