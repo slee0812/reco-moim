@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from maps.FindDestination import calculate_centroid, find_optimal_station, get_nearby_subway_stations, haversine
+from maps.Dijkstra import find_optimal_meeting_location
+from maps.FindStation import find_nearest_stations, get_public_transit_route
+from maps.FindDestination import calculate_centroid, find_optimal_station, get_nearby_subway_stations
 import pandas as pd
 import os
 import json
@@ -224,91 +226,50 @@ def delete_meeting(meeting_id):
 def recommend_page():
     meeting_name = request.args.get("meeting_name", "")
     return render_template("Recommend.html", meeting_name=meeting_name, JAVASCRIPT_KEY=KAKAO_JAVASCRIPT_KEY)
-
-@app.route("/centroid")
-def get_centroid():
-    try:
-        # CSV 파일 읽기
-        data = pd.read_csv('../../Data/maps/subway_stations.csv')
-
-        centroid = calculate_centroid([(37.4842, 126.9293), (37.513768, 127.100080)])
-
-        # '위도'와 '경도'가 숫자 형식인지 확인하고, 결측값 처리
-        data['위도'] = pd.to_numeric(data['위도'], errors='coerce')
-        data['경도'] = pd.to_numeric(data['경도'], errors='coerce')
-        data = data.fillna({'위도': 0, '경도': 0})
-
-        # 각 전철역과 현재 위치 사이의 거리 계산
-        data['거리'] = data.apply(lambda row: haversine(centroid[0], centroid[1], row['위도'], row['경도']), axis=1)
-
-        # 가장 가까운 역 찾기
-        nearest_station = data.loc[data['거리'].idxmin()]
-        result = jsonify({
-            "station": nearest_station['역사명']+"역",
-            "latitude": nearest_station['위도'],
-            "longitude": nearest_station['경도']
-        })
-        return result
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/places")
-def get_places():
-    try:
-        latitude = 37.4842
-        longitude = 126.9293
-
-        # 카카오 API 호출
-        url = "https://dapi.kakao.com/v2/local/search/keyword.json"
-        params = {
-            "query": "음식점",
-            "x": str(longitude),
-            "y": str(latitude),
-            "radius": 5000,
-        }
-        headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
-        response = requests.get(url, headers=headers, params=params)
-
-        if response.status_code == 200:
-            result = response.json()
-            result['centroid'] = {"latitude": latitude, "longitude": longitude}
-            return jsonify(result)
-        else:
-            print(f"Kakao API error: {response.text}")  # Changed logging to print
-            return jsonify({"error": response.text}), response.status_code
-    except Exception as e:
-        print(f"Error in get_places: {str(e)}")  # Changed logging to print
-        return jsonify({"error": str(e)}), 500
     
-@app.route('/optimal-station', methods=['POST'])
-def optimal_station():
-    try:
-        # 요청 데이터 처리
-        data = request.json
-        origins = data.get('origins', [])
-        radius_m = data.get('radius', 5000)
+@app.route('/optimal-station/<path:meeting_name>', methods=['GET'])
+def optimal_station(meeting_name):
+    decoded_name = unquote(meeting_name)  # URL 디코딩 처리
+    meeting = Moim.query.filter_by(meeting_name=decoded_name).first()
 
-        centroid = calculate_centroid(origins)  
-        subway_stations = get_nearby_subway_stations(centroid, radius_m)
-
-        if not subway_stations:
-            return jsonify({"error": "No subway stations found within the radius"}), 404
-
-        result = find_optimal_station(origins, subway_stations)
+    if not meeting:
+        return "Meeting not found", 404  # 모임이 없을 경우 처리
     
+    friends = json.loads(meeting.friends)
+    friend_details = json.loads(meeting.friend_details)
+    coordinates = friend_details.get("coordinates", [])
+
+    origins = []
+    for i, friend in enumerate(friends):
+        if i < len(coordinates):
+            origins.append({
+                "name": friend,
+                "latitude": coordinates[i]["latitude"],
+                "longitude": coordinates[i]["longitude"]
+            })
+
+    origins = find_nearest_stations(origins)
+    print(origins)
+
+    # 최적의 만남 장소 찾기
+    try:
+        destination = find_optimal_meeting_location(origins)
+        print(destination)
+
+        # 대중교통 경로 계산
+        routes = get_public_transit_route(origins, destination)
+        print("Public Transit Routes:", routes)
+
         return jsonify({
-            "centroid": {"latitude": centroid['latitude'], "longitude": centroid['longitude']},
-            "optimal_station_by_total": result["optimal_station_by_total"],
-            "details": result["details"],
+            "optimal_meeting_point": destination,
+            "routes": routes,
+            "total_travel_time": destination["total_travel_time"]
         })
+    
     except Exception as e:
-        # 에러 메시지를 터미널에 출력
-        print("Error occurred:", str(e))
-
-        # Flask 로거에 에러 메시지 추가
-        app.logger.error(f"Error occurred: {str(e)}")
-
+        print("Error finding optimal station or routes:", str(e))
         return jsonify({"error": str(e)}), 500
+
 
 
 from urllib.parse import unquote
