@@ -135,6 +135,8 @@ function sendMessage() {
       var parts = response.response.split('---');
       var chatText = parts[0] || '';
       var infoText = parts[1] || '';
+      var placeCoordinates = parts[2] || '';
+      console.log(placeCoordinates);
 
       // AI 응답 마크다운 적용 및 줄바꿈 처리
       var formattedResponse = chatText
@@ -247,60 +249,6 @@ function getCurrentLocation() {
     );
   } else {
     alert("이 브라우저에서는 위치 정보를 사용할 수 없습니다.");
-  }
-}
-
-// 장소 데이터 로드
-async function loadPlaces() {
-  showLoading();
-  try {
-    // 주변 장소와 중심점 가져오기
-    const placesResponse = await fetch("/places");
-    const placesData = await placesResponse.json();
-
-    // 중심점 가져오기
-    const centroid = placesData.centroid;
-    const centroidPosition = new kakao.maps.LatLng(
-      centroid.latitude,
-      centroid.longitude
-    );
-    map.setCenter(centroidPosition);
-
-    // 마커 생성
-    const markers = placesData.documents.map((place) => {
-      const marker = new kakao.maps.Marker({
-        position: new kakao.maps.LatLng(place.y, place.x),
-      });
-
-      // 인포윈도우 생성
-      const infowindow = new kakao.maps.InfoWindow({
-        content: `
-                      <div style="padding:5px;">
-                          <strong>${place.place_name}</strong>
-                          <p>${place.address_name}</p>
-                      </div>
-                  `,
-      });
-
-      // 클릭 이벤트 추가
-      kakao.maps.event.addListener(marker, "click", function () {
-        infowindow.open(map, marker);
-        // 채팅창에 장소 정보 추가
-        addMessage(
-          `추천 장소: ${place.place_name}\n주소: ${place.address_name}`
-        );
-      });
-
-      return marker;
-    });
-
-    // 클러스터러에 마커 추가
-    clusterer.addMarkers(markers);
-  } catch (error) {
-    console.error("Error loading places:", error);
-    alert("장소 정보를 불러오는데 실패했습니다.");
-  } finally {
-    hideLoading();
   }
 }
 
