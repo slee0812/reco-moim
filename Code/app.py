@@ -275,14 +275,16 @@ def optimal_station(meeting_name):
         destination = find_optimal_meeting_location(origins)
         print(destination)
 
+        # azure 프롬프트 요청
+
+
         # 대중교통 경로 계산
         routes = get_public_transit_route(origins, destination)
         print("Public Transit Routes:", routes)
 
         return jsonify({
             "optimal_meeting_point": destination,
-            "routes": routes,
-            "total_travel_time": destination["total_travel_time"]
+            "details": routes,
         })
     
     except Exception as e:
@@ -302,16 +304,6 @@ def get_meeting_details(meeting_name):
         friends =json.loads(meeting.friends)
         friend_details = json.loads(meeting.friend_details)
 
-        coordinates = friend_details.get("coordinates", [])        
-        centroid = calculate_centroid(coordinates)  
-        subway_stations = get_nearby_subway_stations(centroid)
-
-        if not subway_stations:
-            return jsonify({"error": "No subway stations found within the radius"}), 404
-
-        result = find_optimal_station(coordinates, subway_stations)
-        print(result)
-
         if not meeting:
             return jsonify({"error": "모임 정보를 찾을 수 없습니다."}), 404
         return jsonify({
@@ -320,10 +312,7 @@ def get_meeting_details(meeting_name):
             "date": meeting.date,
             "time": meeting.time,
             "friends": friends,
-            "friend_details": friend_details,
-            "centroid": {"latitude": centroid['latitude'], "longitude": centroid['longitude']},
-            "optimal_station_by_total": result["optimal_station_by_total"],
-            "details": result["details"],
+            "friend_details": friend_details
         }), 200
     except Exception as e:
         print("Error while fetching meeting details:", e)

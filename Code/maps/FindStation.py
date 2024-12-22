@@ -88,5 +88,5 @@ def get_public_transit_route(origins, destination):
                 },
                 "subPath": []
             })
-    return {"details": result}
+    return result
 

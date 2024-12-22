@@ -82,7 +82,7 @@ def find_optimal_meeting_location(origins):
 
     # 7. 결과 반환
     return {
-        "optimal_meeting_point": optimal_station,
+        "optimal_station": optimal_station,
         "latitude": optimal_station_info['위도'],
         "longitude": optimal_station_info['경도'],
         "total_travel_time": total_time,
