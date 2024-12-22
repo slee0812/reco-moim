@@ -294,6 +294,7 @@ def optimal_station(meeting_name):
         print("Public Transit Routes:", routes)
 
         return jsonify({
+            "origins": origins,
             "optimal_meeting_point": destination,
             "details": routes,
         })
