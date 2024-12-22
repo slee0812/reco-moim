@@ -75,11 +75,26 @@ async function initializeMeetingDetails() {
       meetingDetails = await response.json();
       cachedMeetingDetails = meetingDetails; // 캐시 저장
       lastFetchTime = currentTime; // 마지막 호출 시간 갱신
-      console.log("Meeting Details:", meetingDetails);
-
+      console.log("Meeting Details!!!:", meetingDetails);
+      
       // 새로운 기능 추가
-      initializeRoutePanel();
-      await drawAllUserPaths(meetingDetails);
+      // initializeRoutePanel();
+      // await drawAllUserPaths(meetingDetails);
+      
+      const meetingInfoText = `모임장소: 지하철역역
+      모임설명: ${meetingDetails.description}
+      모임인원: ${meetingDetails.friends.length}
+      선호취향: ${meetingDetails.friend_details.positive_prompt.join(", ")}
+      비선호취향: ${meetingDetails.friend_details.negative_prompt.join(", ")}`;
+      
+      console.log("meetingInfoText:", meetingInfoText);
+      
+      
+      // 챗봇의 메시지 작성란에 입력
+      const messageInput = document.getElementById("message-input");
+      if (messageInput) {
+        messageInput.value = meetingInfoText;
+      }
     } else {
       console.error("Error fetching meeting details");
     }
