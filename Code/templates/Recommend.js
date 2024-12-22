@@ -76,20 +76,19 @@ async function initializeMeetingDetails() {
       cachedMeetingDetails = meetingDetails; // 캐시 저장
       lastFetchTime = currentTime; // 마지막 호출 시간 갱신
       console.log("Meeting Details!!!:", meetingDetails);
-      
+
       // 새로운 기능 추가
       // initializeRoutePanel();
       // await drawAllUserPaths(meetingDetails);
-      
+
       const meetingInfoText = `모임장소: 지하철역역
       모임설명: ${meetingDetails.description}
       모임인원: ${meetingDetails.friends.length}
       선호취향: ${meetingDetails.friend_details.positive_prompt.join(", ")}
       비선호취향: ${meetingDetails.friend_details.negative_prompt.join(", ")}`;
-      
+
       console.log("meetingInfoText:", meetingInfoText);
-      
-      
+
       // 챗봇의 메시지 작성란에 입력
       const messageInput = document.getElementById("message-input");
       if (messageInput) {
@@ -189,7 +188,7 @@ const loadingElement = document.getElementById("loading");
 
 // 지도 관련 변수
 let map;
-let userMarkers = [];  // 사용자 마커를 저장할 배열 추가
+let userMarkers = []; // 사용자 마커를 저장할 배열 추가
 
 // 지도 초기화
 async function initializeMap() {
@@ -214,19 +213,21 @@ async function initializeMap() {
 async function displayUserLocations() {
   const urlParams = new URLSearchParams(window.location.search);
   const meetingName = urlParams.get("meeting_name");
-  
   if (!meetingName) return;
 
   try {
-    const response = await fetch(`/get-meeting-details/${encodeURIComponent(meetingName)}`);
-    if (!response.ok) throw new Error('Failed to fetch meeting details');
-    
+    const response = await fetch(
+      `/optimal-station/${encodeURIComponent(meetingName)}`
+    );
+    if (!response.ok) throw new Error("Failed to fetch meeting details");
+
     const data = await response.json();
-    const friendDetails = data.friend_details;
+    drawAllUserPaths(data);
+    const friendDetails = data.friendDetails;
     const friends = data.friends;
-    
+
     // 기존 마커 제거
-    userMarkers.forEach(marker => marker.setMap(null));
+    userMarkers.forEach((marker) => marker.setMap(null));
     userMarkers = [];
 
     // 각 친구의 위치에 마커 생성
@@ -235,16 +236,16 @@ async function displayUserLocations() {
         const position = new kakao.maps.LatLng(coord.latitude, coord.longitude);
         const marker = new kakao.maps.Marker({
           position: position,
-          map: map
+          map: map,
         });
 
         // 인포윈도우 생성
         const infowindow = new kakao.maps.InfoWindow({
-          content: `<div style="padding:5px;">${friends[index]}</div>`
+          content: `<div style="padding:5px;">${friends[index]}</div>`,
         });
 
         // 마커 클릭 시 인포윈도우 표시
-        kakao.maps.event.addListener(marker, 'click', function() {
+        kakao.maps.event.addListener(marker, "click", function () {
           infowindow.open(map, marker);
         });
 
@@ -254,12 +255,12 @@ async function displayUserLocations() {
       // 모든 마커가 보이도록 지도 범위 조정
       if (userMarkers.length > 0) {
         const bounds = new kakao.maps.LatLngBounds();
-        userMarkers.forEach(marker => bounds.extend(marker.getPosition()));
+        userMarkers.forEach((marker) => bounds.extend(marker.getPosition()));
         map.setBounds(bounds);
       }
     }
   } catch (error) {
-    console.error('Error displaying user locations:', error);
+    console.error("Error displaying user locations:", error);
   }
 }
 
@@ -339,8 +340,8 @@ function generateRandomColor() {
 // 모든 사용자의 경로 표시
 async function drawAllUserPaths(meetingDetails) {
   const friends = meetingDetails.friends;
-  const coordinates = meetingDetails.friend_details.coordinates;
-  const destination = meetingDetails.optimal_station_by_total;
+  const coordinates = meetingDetails.friendDetails.coordinates;
+  const destination = meetingDetails.optimal_meeting_point;
 
   // 목적지 마커 생성
   const destinationMarker = new kakao.maps.Marker({
@@ -350,53 +351,45 @@ async function drawAllUserPaths(meetingDetails) {
     ),
     map: map,
   });
-
   // 목적지 정보창
   new kakao.maps.InfoWindow({
     content: `<div style="padding:5px;text-align:center;">
-          <strong>${destination.station_name}</strong><br>
+          <strong>${destination.optimal_station}</strong><br>
           목적지
       </div>`,
     map: map,
     position: destinationMarker.getPosition(),
   });
 
-  routePanel.innerHTML = '<h3 style="margin-bottom:15px;">경로 정보</h3>';
-
   for (let i = 0; i < friends.length; i++) {
     const userName = friends[i];
     const startPoint = coordinates[i];
     const color = generateRandomColor();
-
-    const pathData = await findPath(
-      startPoint.longitude,
-      startPoint.latitude,
-      destination.longitude,
-      destination.latitude
-    );
-
-    if (pathData.result && pathData.result.path) {
-      drawUserPath(pathData.result.path[0], color, userName, startPoint);
-      addRouteInfo(userName, pathData.result.path[0], color);
+    if (meetingDetails.details[i]) {
+      drawUserPath(meetingDetails.details[i], color, userName, startPoint);
     }
   }
 }
 
-// 경로 찾기 API 호출
-async function findPath(startX, startY, endX, endY) {
-  try {
-    const response = await fetch(
-      `/find-path?sx=${startX}&sy=${startY}&ex=${endX}&ey=${endY}`
-    );
-    return await response.json();
-  } catch (error) {
-    console.error("Error finding path:", error);
-    return null;
-  }
-}
+// // 경로 찾기 API 호출
+// async function findPath(startX, startY, endX, endY) {
+//   try {
+//     const response = await fetch(
+//       `/find-path?sx=${startX}&sy=${startY}&ex=${endX}&ey=${endY}`
+//     );
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Error finding path:", error);
+//     return null;
+//   }
+// }
 
 // 사용자별 경로 그리기
 function drawUserPath(path, color, userName, startPoint) {
+  let userMarkers = new Map(); // 사용자 마커를 저장할 Map
+  let userPaths = new Map(); // 사용자 경로를 저장할 Map
+  let userInfoWindows = new Map(); // 사용자 정보창을 저장할 Map
+
   if (userPaths.has(userName)) {
     userPaths.get(userName).forEach((line) => line.setMap(null));
   }
