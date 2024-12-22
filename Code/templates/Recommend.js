@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   meetingAllDetails = await initializeMeetingDetails();
   initializeMap();
   initializeMapControls();
-  loadPlaces();
   initializeChatHandlers();
   initializeMeetingInfo();
 });
@@ -18,7 +17,9 @@ async function displayInitialMeetingInfo() {
   if (!meetingName) return;
 
   try {
-    const response = await fetch(`/get-basic-meeting-info/${encodeURIComponent(meetingName)}`);
+    const response = await fetch(
+      `/get-basic-meeting-info/${encodeURIComponent(meetingName)}`
+    );
     if (!response.ok) {
       throw new Error("모임 정보를 가져오는 데 실패했습니다.");
     }
@@ -132,10 +133,10 @@ function sendMessage() {
       }
 
       // 응답 텍스트를 ---로 구분
-      var parts = response.response.split('---');
-      var chatText = parts[0] || '';
-      var infoText = parts[1] || '';
-      var placeCoordinates = parts[2] || '';
+      var parts = response.response.split("---");
+      var chatText = parts[0] || "";
+      var infoText = parts[1] || "";
+      var placeCoordinates = parts[2] || "";
       console.log(placeCoordinates);
 
       // AI 응답 마크다운 적용 및 줄바꿈 처리
@@ -173,12 +174,6 @@ const loadingElement = document.getElementById("loading");
 
 // 지도 관련 변수
 let map;
-let clusterer;
-let userMarker = null;
-let userMarkers = new Map(); // 사용자별 마커 저장
-let userPaths = new Map(); // 사용자별 경로선 저장
-let userInfoWindows = new Map(); // 사용자별 정보창 저장
-const routePanel = document.createElement("div"); // 경로 정보 패널
 
 // 지도 초기화
 function initializeMap() {
@@ -188,15 +183,6 @@ function initializeMap() {
     level: 6,
   };
   map = new kakao.maps.Map(mapContainer, mapOption);
-
-  // 클러스터러 초기화
-  clusterer = new kakao.maps.MarkerClusterer({
-    map: map,
-    averageCenter: true,
-    minLevel: 4,
-    disableClickZoom: true,
-    gridSize: 60,
-  });
 
   // 지도 컨트롤 추가
   const zoomControl = new kakao.maps.ZoomControl();
@@ -271,178 +257,4 @@ if (memberCountInput) {
   memberCountInput.addEventListener("change", function () {
     if (this.value < 2) this.value = 2;
   });
-}
-function generateRandomColor() {
-  const hue = Math.floor(Math.random() * 360);
-  return `hsl(${hue}, 70%, 50%)`;
-}
-
-// 경로 패널 초기화
-function initializeRoutePanel() {
-  routePanel.className = "route-panel";
-  routePanel.style.cssText = `
-      position: absolute;
-      left: 10px;
-      top: 10px;
-      max-width: 300px;
-      max-height: 80vh;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      overflow-y: auto;
-      padding: 15px;
-      z-index: 1;
-  `;
-  document.getElementById("map").appendChild(routePanel);
-}
-
-// 모든 사용자의 경로 표시
-async function drawAllUserPaths(meetingDetails) {
-  const friends = meetingDetails.friends;
-  const coordinates = meetingDetails.friend_details.coordinates;
-  const destination = meetingDetails.optimal_station_by_total;
-
-  // 목적지 마커 생성
-  const destinationMarker = new kakao.maps.Marker({
-    position: new kakao.maps.LatLng(
-      destination.latitude,
-      destination.longitude
-    ),
-    map: map,
-  });
-
-  // 목적지 정보창
-  new kakao.maps.InfoWindow({
-    content: `<div style="padding:5px;text-align:center;">
-          <strong>${destination.station_name}</strong><br>
-          목적지
-      </div>`,
-    map: map,
-    position: destinationMarker.getPosition(),
-  });
-
-  routePanel.innerHTML = '<h3 style="margin-bottom:15px;">경로 정보</h3>';
-
-  for (let i = 0; i < friends.length; i++) {
-    const userName = friends[i];
-    const startPoint = coordinates[i];
-    const color = generateRandomColor();
-
-    const pathData = await findPath(
-      startPoint.longitude,
-      startPoint.latitude,
-      destination.longitude,
-      destination.latitude
-    );
-
-    if (pathData.result && pathData.result.path) {
-      drawUserPath(pathData.result.path[0], color, userName, startPoint);
-      addRouteInfo(userName, pathData.result.path[0], color);
-    }
-  }
-}
-
-// 경로 찾기 API 호출
-async function findPath(startX, startY, endX, endY) {
-  try {
-    const response = await fetch(
-      `/find-path?sx=${startX}&sy=${startY}&ex=${endX}&ey=${endY}`
-    );
-    return await response.json();
-  } catch (error) {
-    console.error("Error finding path:", error);
-    return null;
-  }
-}
-
-// 사용자별 경로 그리기
-function drawUserPath(path, color, userName, startPoint) {
-  if (userPaths.has(userName)) {
-    userPaths.get(userName).forEach((line) => line.setMap(null));
-  }
-
-  const pathLines = [];
-
-  const startMarker = new kakao.maps.Marker({
-    position: new kakao.maps.LatLng(startPoint.latitude, startPoint.longitude),
-    map: map,
-  });
-  userMarkers.set(userName, startMarker);
-
-  const infowindow = new kakao.maps.InfoWindow({
-    content: `<div style="padding:5px;text-align:center;">
-          <strong>${userName}</strong><br>
-          소요시간: ${path.info.totalTime}분
-      </div>`,
-    map: map,
-    position: startMarker.getPosition(),
-  });
-  userInfoWindows.set(userName, infowindow);
-
-  path.subPath.forEach((subPath) => {
-    if (subPath.passStopList?.stations) {
-      const linePath = subPath.passStopList.stations.map(
-        (station) => new kakao.maps.LatLng(station.y, station.x)
-      );
-
-      const polyline = new kakao.maps.Polyline({
-        path: linePath,
-        strokeWeight: 5,
-        strokeColor: color,
-        strokeOpacity: 0.7,
-      });
-
-      polyline.setMap(map);
-      pathLines.push(polyline);
-    }
-  });
-
-  userPaths.set(userName, pathLines);
-}
-
-// 경로 패널에 정보 추가
-function addRouteInfo(userName, path, color) {
-  const userSection = document.createElement("div");
-  userSection.className = "user-route-section";
-  userSection.style.cssText = `
-      margin-bottom: 15px;
-      padding: 10px;
-      border-radius: 5px;
-      border-left: 4px solid ${color};
-      background: #f8f9fa;
-  `;
-
-  userSection.innerHTML = `
-      <h4 style="margin:0 0 10px 0">${userName}</h4>
-      <p>총 소요시간: ${path.info.totalTime}분</p>
-      <p>총 거리: ${path.info.totalDistance}m</p>
-      <div class="route-details">
-          ${path.subPath
-            .map(
-              (subPath) => `
-              <div style="margin-top:5px">
-                  ${getTransportTypeText(subPath.trafficType)}:
-                  ${subPath.sectionTime}분
-              </div>
-          `
-            )
-            .join("")}
-      </div>
-  `;
-
-  routePanel.appendChild(userSection);
-}
-
-// 교통수단 텍스트 반환
-function getTransportTypeText(trafficType) {
-  switch (trafficType) {
-    case 1:
-      return "지하철";
-    case 2:
-      return "버스";
-    case 3:
-      return "도보";
-    default:
-      return "기타";
-  }
 }
