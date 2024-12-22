@@ -330,3 +330,112 @@ if (memberCountInput) {
     if (this.value < 2) this.value = 2;
   });
 }
+
+function generateRandomColor() {
+  const hue = Math.floor(Math.random() * 360);
+  return `hsl(${hue}, 70%, 50%)`;
+}
+
+// 모든 사용자의 경로 표시
+async function drawAllUserPaths(meetingDetails) {
+  const friends = meetingDetails.friends;
+  const coordinates = meetingDetails.friend_details.coordinates;
+  const destination = meetingDetails.optimal_station_by_total;
+
+  // 목적지 마커 생성
+  const destinationMarker = new kakao.maps.Marker({
+    position: new kakao.maps.LatLng(
+      destination.latitude,
+      destination.longitude
+    ),
+    map: map,
+  });
+
+  // 목적지 정보창
+  new kakao.maps.InfoWindow({
+    content: `<div style="padding:5px;text-align:center;">
+          <strong>${destination.station_name}</strong><br>
+          목적지
+      </div>`,
+    map: map,
+    position: destinationMarker.getPosition(),
+  });
+
+  routePanel.innerHTML = '<h3 style="margin-bottom:15px;">경로 정보</h3>';
+
+  for (let i = 0; i < friends.length; i++) {
+    const userName = friends[i];
+    const startPoint = coordinates[i];
+    const color = generateRandomColor();
+
+    const pathData = await findPath(
+      startPoint.longitude,
+      startPoint.latitude,
+      destination.longitude,
+      destination.latitude
+    );
+
+    if (pathData.result && pathData.result.path) {
+      drawUserPath(pathData.result.path[0], color, userName, startPoint);
+      addRouteInfo(userName, pathData.result.path[0], color);
+    }
+  }
+}
+
+// 경로 찾기 API 호출
+async function findPath(startX, startY, endX, endY) {
+  try {
+    const response = await fetch(
+      `/find-path?sx=${startX}&sy=${startY}&ex=${endX}&ey=${endY}`
+    );
+    return await response.json();
+  } catch (error) {
+    console.error("Error finding path:", error);
+    return null;
+  }
+}
+
+// 사용자별 경로 그리기
+function drawUserPath(path, color, userName, startPoint) {
+  if (userPaths.has(userName)) {
+    userPaths.get(userName).forEach((line) => line.setMap(null));
+  }
+
+  const pathLines = [];
+
+  const startMarker = new kakao.maps.Marker({
+    position: new kakao.maps.LatLng(startPoint.latitude, startPoint.longitude),
+    map: map,
+  });
+  userMarkers.set(userName, startMarker);
+
+  const infowindow = new kakao.maps.InfoWindow({
+    content: `<div style="padding:5px;text-align:center;">
+          <strong>${userName}</strong><br>
+          소요시간: ${path.info.totalTime}분
+      </div>`,
+    map: map,
+    position: startMarker.getPosition(),
+  });
+  userInfoWindows.set(userName, infowindow);
+
+  path.subPath.forEach((subPath) => {
+    if (subPath.passStopList?.stations) {
+      const linePath = subPath.passStopList.stations.map(
+        (station) => new kakao.maps.LatLng(station.y, station.x)
+      );
+
+      const polyline = new kakao.maps.Polyline({
+        path: linePath,
+        strokeWeight: 5,
+        strokeColor: color,
+        strokeOpacity: 0.7,
+      });
+
+      polyline.setMap(map);
+      pathLines.push(polyline);
+    }
+  });
+
+  userPaths.set(userName, pathLines);
+}
