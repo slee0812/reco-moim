@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 각 기능을 초기화하는 함수 호출
   await initializeMeetingName();
   await displayInitialMeetingInfo(); // 추가 정보 창에 모임 정보 출력
-  const meetingDetails = await initializeMeetingDetails();
+  meetingAllDetails = await initializeMeetingDetails();
   initializeMap();
   initializeMapControls();
   loadPlaces();
