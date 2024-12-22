@@ -8,6 +8,9 @@ import os
 import json
 import requests  # Add this import
 from openai import AzureOpenAI
+
+
+
 app = Flask(__name__, template_folder="templates", static_folder="templates")
 
 search_endpoint = "https://team6service.search.windows.net"
@@ -387,9 +390,6 @@ def find_path():
 
 
 # 로그인 기능을 위한 코드
-
-
-
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
