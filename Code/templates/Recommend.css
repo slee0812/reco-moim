@@ -196,7 +196,7 @@ footer {
   background-color: #f8f9fa;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   font-family: Arial, sans-serif;
-  height: 700px;
+  height: 85vh; /* 챗봇의 크기를 키움 */
 }
 
 #chat-messages {
@@ -271,5 +271,41 @@ button:hover {
 #open-popup-btn {
   position: absolute;
   z-index: 3000;
+}
+
+/* 추가 정보 상자 스타일 */
+#info-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  height: 100px; /* 세로 길이를 반으로 줄임 */
+  overflow-y: auto;
+}
+
+#info-box p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* 스크롤바 스타일 */
+#info-box::-webkit-scrollbar {
+  width: 6px;
+}
+#info-box::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 10px;
+}
+#info-box::-webkit-scrollbar-track {
+  background-color: #f8f9fa;
 }
 

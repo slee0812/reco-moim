@@ -1,94 +1,43 @@
 document.addEventListener("DOMContentLoaded", async () => {
   // 각 기능을 초기화하는 함수 호출
   await initializeMeetingName();
+  await displayInitialMeetingInfo(); // 추가 정보 창에 모임 정보 출력
   const meetingDetails = await initializeMeetingDetails();
   initializeMap();
   initializeMapControls();
   loadPlaces();
   initializeChatHandlers();
   initializeMeetingInfo();
-
-  const popupOverlay = document.getElementById("meeting-popup");
-  const closePopupBtn = document.getElementById("close-popup-btn");
-  const openPopupBtn = document.getElementById("open-popup-btn");
-  const popupImageContainer = document.getElementById("popup-image-container");
-
-  const currentMeetingName = new URLSearchParams(window.location.search).get("meeting_name");
-
-  openPopupBtn.addEventListener("click", async () => {
-    console.log("버튼이 클릭되었습니다!"); // 클릭 확인용
-    try {
-      if (!currentMeetingName) {
-        alert("모임 이름이 없습니다.");
-        return;
-      }
-      const res = await fetch(`/popup-info/${encodeURIComponent(currentMeetingName)}`);
-      if (!res.ok) {
-        throw new Error("팝업 정보를 가져오는 데 실패했습니다.");
-      }
-      const data = await res.json();
-      if (data.error) {
-        alert(data.error);
-        return;
-      }
-      // 팝업 내부를 채움
-      popupImageContainer.innerHTML = `
-        <p>설명: ${data.description}</p>
-        <p>날짜: ${data.date}</p>
-        <p>시간: ${data.time}</p>
-        <p>친구: ${data.friends.join(", ")}</p>
-      `;
-      // 팝업 표시
-      popupOverlay.style.display = "flex";
-    } catch (error) {
-      console.error(error);
-      alert("오류가 발생했습니다.");
-    }
-  });
-
-  closePopupBtn.addEventListener("click", () => {
-    // 팝업 숨기기
-    popupOverlay.style.display = "none";
-  });
 });
 
-function sendMessage() {
-  var userMessage = $("#user-input").val();
-  $("#chat-messages").append(
-    "<p><strong>You:</strong> " + userMessage + "</p>"
-  );
-  $("#user-input").val("");
+// 추가 정보 창에 모임 정보 출력
+async function displayInitialMeetingInfo() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const meetingName = urlParams.get("meeting_name");
 
-  $.ajax({
-    url: "/chat",
-    method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({ message: userMessage }),
-    success: function (response) {
-      // AI 응답을 줄바꿈으로 분리
-      var formattedResponse = response.response
-        .split("\n")
-        .map(function (line) {
-          return "<p>" + line + "</p>";
-        })
-        .join("");
+  if (!meetingName) return;
 
-      $("#chat-messages").append(
-        "<p><strong>AI:</strong></p>" + formattedResponse
-      );
+  try {
+    const response = await fetch(`/get-basic-meeting-info/${encodeURIComponent(meetingName)}`);
+    if (!response.ok) {
+      throw new Error("모임 정보를 가져오는 데 실패했습니다.");
+    }
+    const meetingDetails = await response.json();
+    if (meetingDetails.error) {
+      alert(meetingDetails.error);
+      return;
+    }
 
-      // 인용 정보 표시
-      if (response.citations && response.citations.length > 0) {
-        var citationsHtml = "<p><strong>인용:</strong></p><ul>";
-        response.citations.forEach(function (citation) {
-          citationsHtml +=
-            "<li>" + citation.content + " (출처: " + citation.source + ")</li>";
-        });
-        citationsHtml += "</ul>";
-        $("#chat-messages").append(citationsHtml);
-      }
-    },
-  });
+    const infoBox = document.getElementById("info-box");
+    infoBox.innerHTML = `
+      <p><strong>모임 설명:</strong> ${meetingDetails.description}</p>
+      <p><strong>날짜:</strong> ${meetingDetails.date}</p>
+      <p><strong>시간:</strong> ${meetingDetails.time}</p>
+      <p><strong>참여 인원:</strong> ${meetingDetails.friends.join(", ")}</p>
+    `;
+  } catch (error) {
+    console.error("Error fetching initial meeting info:", error);
+  }
 }
 
 // 1. URL에서 모임 이름 가져오기 및 모임 이름 표시
@@ -140,10 +89,6 @@ async function initializeMeetingDetails() {
   return meetingDetails;
 }
 
-
-// 정성준 수정 파트 종료
-//meetingDetails.friends_details를 사용하여 친구 정보를 가져올 수 있음 나중에 코드를 gpt에 활용용
-
 // 프롬프트 정보 업데이트 함수
 function updatePromptInfo(friendDetails) {
   const promptContainer = document.getElementById("prompt");
@@ -161,6 +106,61 @@ function updatePromptInfo(friendDetails) {
       friendDetails.negative_prompt?.join(", ") || "정보 없음"
     }</p>
   `;
+}
+
+function sendMessage() {
+  var userMessage = $("#user-input").val();
+  $("#chat-messages").append(
+    "<p><strong>You:</strong> " + userMessage + "</p>"
+  );
+  $("#user-input").val("");
+
+  $.ajax({
+    url: "/chat",
+    method: "POST",
+    contentType: "application/json",
+    data: JSON.stringify({ message: userMessage }),
+    success: function (response) {
+      // 마크다운 처리 함수 정의
+      function applyMarkdown(text) {
+        return text
+          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // **bold**
+          .replace(/__(.*?)__/g, "<em>$1</em>") // __italic__
+          .replace(/## (.*?)\n/g, "<h2>$1</h2>") // ## Heading 2
+          .replace(/# (.*?)\n/g, "<h1>$1</h1>") // # Heading 1
+          .replace(/\n/g, "<br>"); // 줄바꿈
+      }
+
+      // 응답 텍스트를 ---로 구분
+      var parts = response.response.split('---');
+      var chatText = parts[0] || '';
+      var infoText = parts[1] || '';
+
+      // AI 응답 마크다운 적용 및 줄바꿈 처리
+      var formattedResponse = chatText
+        .split("\n")
+        .map(function (line) {
+          return "<p>" + applyMarkdown(line) + "</p>";
+        })
+        .join("");
+
+      $("#chat-messages").append(
+        "<p><strong>AI:</strong></p>" + formattedResponse
+      );
+
+      // 추가 정보 상자에 정보 출력
+      if (infoText.trim()) {
+        var formattedInfo = infoText
+          .split("\n")
+          .map(function (line) {
+            return "<p>" + applyMarkdown(line) + "</p>";
+          })
+          .join("");
+
+        $("#info-box").html(formattedInfo);
+      }
+    },
+  });
 }
 
 // DOM 요소

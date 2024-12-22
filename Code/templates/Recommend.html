@@ -17,13 +17,15 @@
       <div id="meeting-info-container">
         <span id="meeting-name">친구들과의 저녁식사</span>
       </div>
-      <!-- 오른쪽 상단 팝업 버튼 -->
-      <button id="open-popup-btn" style="position: absolute; top: 10px; right: 20px;">모임 정보</button>
     </header>
 
     <main id="main-container">
       <div id="map"></div>
       <div id="chat-container">
+        <!-- 추가 정보 상자 -->
+        <div id="info-box">
+          <p>추가 정보가 여기에 표시됩니다.</p>
+        </div>
         <div id="chat-messages"></div>
         <div id="input-container">
           <textarea
@@ -35,18 +37,6 @@
         </div>
       </div>
     </main>
-    <!-- 팝업 구조 -->
-    <div id="meeting-popup" class="popup-overlay" style="display: none;">
-      <div class="popup-content">
-        <span id="close-popup-btn">&times;</span>
-        <div id="popup-details">
-          <!-- 여기서 meetingDetails 데이터를 이미지처럼 표현 -->
-          <div id="popup-image-container">
-            <!-- 데이터가 JS에서 동적으로 삽입됨 -->
-          </div>
-        </div>
-      </div>
-    </div>
 
     <script>
       const userInput = document.getElementById("user-input");
