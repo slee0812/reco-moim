@@ -131,7 +131,6 @@ function sendMessage() {
       var chatText = parts[0] || "";
       var infoText = parts[1] || "";
       var placeCoordinates = parts[2] || "";
-      console.log(placeCoordinates);
 
       // AI 응답 마크다운 적용 및 줄바꿈 처리
       var formattedResponse = chatText
@@ -156,6 +155,7 @@ function sendMessage() {
 
         $("#info-box").html(formattedInfo);
       }
+      return placeCoordinates;
     },
   });
 }
@@ -172,19 +172,6 @@ let userMarkers = []; // 사용자 마커를 저장할 배열 추가
 
 // 지도 초기화
 async function initializeMap() {
-  const mapContainer = document.getElementById("map");
-  const mapOption = {
-    center: new kakao.maps.LatLng(37.5666805, 126.9784147),
-    level: 6,
-  };
-  map = new kakao.maps.Map(mapContainer, mapOption);
-
-  // 지도 컨트롤 추가
-  const zoomControl = new kakao.maps.ZoomControl();
-  const mapTypeControl = new kakao.maps.MapTypeControl();
-  map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
-  map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
-
   // 사용자 위치 마커 표시
   await displayUserLocations();
 }
@@ -200,9 +187,26 @@ async function displayUserLocations() {
       `/optimal-station/${encodeURIComponent(meetingName)}`
     );
     if (!response.ok) throw new Error("Failed to fetch meeting details");
-    console.log("response:", response);
 
     const data = await response.json();
+    console.log(data);
+
+    // 지도 첫설정
+    const mapContainer = document.getElementById("map");
+    const mapOption = {
+      center: new kakao.maps.LatLng(
+        data.center.latitude,
+        data.center.longitude
+      ),
+      level: 7,
+    };
+    map = new kakao.maps.Map(mapContainer, mapOption);
+
+    // 지도 컨트롤 추가
+    const zoomControl = new kakao.maps.ZoomControl();
+    const mapTypeControl = new kakao.maps.MapTypeControl();
+    map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+    map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
 
     if (data.optimal_meeting_point) {
       optimalMeetingPoint = data.optimal_meeting_point.optimal_station; // 전역 변수에 저장
@@ -234,42 +238,40 @@ async function displayUserLocations() {
     console.error("Error fetching meeting details:", error);
   }
 
+  // 기존 마커 제거
+  userMarkers.forEach((marker) => marker.setMap(null));
+  userMarkers = [];
 
-    // 기존 마커 제거
-    userMarkers.forEach((marker) => marker.setMap(null));
-    userMarkers = [];
-
-    // 각 친구의 위치에 마커 생성
-    if (friendDetails.coordinates && friendDetails.coordinates.length > 0) {
-      friendDetails.coordinates.forEach((coord, index) => {
-        const position = new kakao.maps.LatLng(coord.latitude, coord.longitude);
-        const marker = new kakao.maps.Marker({
-          position: position,
-          map: map,
-        });
-
-        // 인포윈도우 생성
-        const infowindow = new kakao.maps.InfoWindow({
-          content: `<div style="padding:5px;">${friends[index]}</div>`,
-        });
-
-        // 마커 클릭 시 인포윈도우 표시
-        kakao.maps.event.addListener(marker, "click", function () {
-          infowindow.open(map, marker);
-        });
-
-        userMarkers.push(marker);
+  // 각 친구의 위치에 마커 생성
+  if (friendDetails.coordinates && friendDetails.coordinates.length > 0) {
+    friendDetails.coordinates.forEach((coord, index) => {
+      const position = new kakao.maps.LatLng(coord.latitude, coord.longitude);
+      const marker = new kakao.maps.Marker({
+        position: position,
+        map: map,
       });
 
-      // 모든 마커가 보이도록 지도 범위 조정
-      if (userMarkers.length > 0) {
-        const bounds = new kakao.maps.LatLngBounds();
-        userMarkers.forEach((marker) => bounds.extend(marker.getPosition()));
-        map.setBounds(bounds);
-      }
-    }
-  } 
+      // 인포윈도우 생성
+      const infowindow = new kakao.maps.InfoWindow({
+        content: `<div style="padding:5px;">${friends[index]}</div>`,
+      });
 
+      // 마커 클릭 시 인포윈도우 표시
+      kakao.maps.event.addListener(marker, "click", function () {
+        infowindow.open(map, marker);
+      });
+
+      userMarkers.push(marker);
+    });
+
+    // 모든 마커가 보이도록 지도 범위 조정
+    if (userMarkers.length > 0) {
+      const bounds = new kakao.maps.LatLngBounds();
+      userMarkers.forEach((marker) => bounds.extend(marker.getPosition()));
+      map.setBounds(bounds);
+    }
+  }
+}
 
 // 지도 컨트롤 초기화
 function initializeMapControls() {

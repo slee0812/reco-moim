@@ -1,8 +1,7 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from maps.Dijkstra import find_optimal_meeting_location
-from maps.FindStation import find_nearest_stations, get_public_transit_route
-from maps.FindDestination import calculate_centroid, find_optimal_station, get_nearby_subway_stations
+from maps.FindStation import find_nearest_stations, get_public_transit_route, calculate_centroid
 import pandas as pd
 import os
 import json
@@ -279,21 +278,18 @@ def optimal_station(meeting_name):
             })
 
     origins = find_nearest_stations(origins)
-    print(origins)
 
     # 최적의 만남 장소 찾기
     try:
         destination = find_optimal_meeting_location(origins)
-        print(destination)
 
-        # azure 프롬프트 요청
-
+        center = calculate_centroid(coordinates)
 
         # 대중교통 경로 계산
         routes = get_public_transit_route(origins, destination)
-        print("Public Transit Routes:", routes)
 
         return jsonify({
+            "center": center,
             "friends": friends,
             "friendDetails": friend_details,
             "optimal_meeting_point": destination,
