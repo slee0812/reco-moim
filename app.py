@@ -208,13 +208,15 @@ def create_meeting():
                 "status": "error",
                 "message": f"다음 친구들의 위치 정보가 없습니다: {', '.join(missing_locations)}"
             }), 400
-
+        
+        # friends를 selected_friends의 순서에 맞게 정렬
+        friends_dict = {friend.name: friend for friend in friends}
+        sorted_friends = [friends_dict[name] for name in selected_friends if name in friends_dict]
         friend_details = {
-            "location": [friend.location for friend in friends if friend.location],
-            "coordinates": [{"latitude": friend.latitude, "longitude": friend.longitude} 
-                          for friend in friends],  # 좌표 정보 추가
-            "positive_prompt": [friend.positive_prompt for friend in friends if friend.positive_prompt],
-            "negative_prompt": [friend.negative_prompt for friend in friends if friend.negative_prompt],
+            "location": [friend.location for friend in sorted_friends if friend.location],
+            "coordinates": [{"latitude": friend.latitude, "longitude": friend.longitude} for friend in sorted_friends],
+            "positive_prompt": [friend.positive_prompt for friend in sorted_friends if friend.positive_prompt],
+            "negative_prompt": [friend.negative_prompt for friend in sorted_friends if friend.negative_prompt],
         }
 
         new_moin = Moim(
@@ -284,10 +286,10 @@ def optimal_station(meeting_name):
         destination = find_optimal_meeting_location(origins)
 
         center = calculate_centroid(coordinates)
-
+        
         # 대중교통 경로 계산
         routes = get_public_transit_route(origins, destination)
-
+        
         return jsonify({
             "center": center,
             "friends": friends,

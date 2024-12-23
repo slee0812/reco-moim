@@ -41,8 +41,8 @@ def find_optimal_meeting_location(origins):
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 현재 파일의 절대 경로
     
     # 1. 지하철 데이터 경로 설정
-    subway_data_path = os.path.join(BASE_DIR, "../Data/maps/seoul_subway.csv")
-    subway_coordinates_data_path = os.path.join(BASE_DIR, "../Data/maps/seoul_subway.csv")
+    subway_data_path = os.path.join(BASE_DIR, "../Data/maps/updated_seoul_subway.csv")
+    subway_coordinates_data_path = os.path.join(BASE_DIR, "../Data/maps/updated_seoul_subway.csv")
 
     # 2. 각 사람의 가장 가까운 역 추출
     try:
@@ -96,5 +96,5 @@ def main(file_path, start_stations):
     G = create_graph(df)
     optimal_station, total_time = find_optimal_meeting_point(G, start_stations)
     # 사용 예시
-    file_path = "../Data/maps/seoul_subway.csv"  # CSV 파일의 경로를 지정하세요
+    file_path = "../Data/maps/updated_seoul_subway.csv"  # CSV 파일의 경로를 지정하세요
     start_stations = ["석계", "남부터미널", "왕십리"]
