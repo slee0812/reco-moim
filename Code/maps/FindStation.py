@@ -90,3 +90,20 @@ def get_public_transit_route(origins, destination):
             })
     return result
 
+# 중심점 위치 찾기
+def calculate_centroid(locations):
+    # locations: 각 위치의 {"latitude": , "longitude": } 딕셔너리 리스트
+    # people_counts를 사용하지 않고, 모든 위치에 동일한 인원수(1명)를 가정
+
+    # 각 위치에 동일한 인원 수(1명)가 있다고 가정
+    total_people = len(locations)  # 각 위치에 1명씩 있다고 가정
+
+    # 각 위도와 경도를 리스트화
+    weighted_latitudes = np.array([loc["latitude"] for loc in locations])
+    weighted_longitudes = np.array([loc["longitude"] for loc in locations])
+    
+    # 총 인원수로 나누어 가중 평균 계산
+    centroid_latitude = weighted_latitudes.sum() / total_people
+    centroid_longitude = weighted_longitudes.sum() / total_people
+    result = {"latitude": centroid_latitude, "longitude": centroid_longitude}
+    return result
