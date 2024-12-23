@@ -87,6 +87,8 @@ header {
   border-radius: 4px;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 120px; /* 가로 길이 추가 */
+  color: #000; /* 글자색을 검정으로 변경 */
 }
 
 .custom-control:hover {
@@ -308,4 +310,3 @@ button:hover {
 #info-box::-webkit-scrollbar-track {
   background-color: #f8f9fa;
 }
-

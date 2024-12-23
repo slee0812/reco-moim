@@ -1,5 +1,16 @@
 let miomDescription = ""; // 전역 변수로 선언
 
+// DOM 요소
+const chatMessages = document.querySelector(".chat-messages");
+const messageInput = document.getElementById("message-input");
+const sendButton = document.getElementById("send-button");
+const loadingElement = document.getElementById("loading");
+
+// 지도 관련 변수
+let map;
+let userMarkers = []; // 사용자 마커를 저장할 배열 추가
+let placesMarker = []; // 음식점 마커를 저장할 배열 추가
+
 document.addEventListener("DOMContentLoaded", async () => {
   // 각 기능을 초기화하는 함수 호출
   await initializeMeetingName();
@@ -105,6 +116,8 @@ function updatePromptInfo(friendDetails) {
 
 function sendMessage() {
   var userMessage = $("#user-input").val();
+  placesMarker.forEach((marker) => marker.setMap(null));
+  placesMarker = [];
   $("#chat-messages").append(
     "<p><strong>You:</strong> " + userMessage + "</p>"
   );
@@ -155,20 +168,38 @@ function sendMessage() {
 
         $("#info-box").html(formattedInfo);
       }
-      return placeCoordinates;
+      restaurantsJSON = JSON.parse(response.restaurants);
+      console.log(restaurantsJSON);
+      if (restaurantsJSON) {
+        restaurantsJSON.restaurants.forEach((restaurant, index) => {
+          // latitude와 longitude가 null일 수 있으므로 체크
+          if (restaurant.latitude && restaurant.longitude) {
+            const position = new kakao.maps.LatLng(
+              restaurant.latitude,
+              restaurant.longitude
+            );
+            const placeMarker = new kakao.maps.Marker({
+              position: position,
+              map: map,
+            });
+
+            // 인포윈도우 생성 (placeCoordinatesJSON 대신 restaurant 사용)
+            const infowindow = new kakao.maps.InfoWindow({
+              content: `<div style="padding:5px;">${restaurant.restraurant_name}</div>`,
+            });
+
+            // 마커 클릭 시 인포윈도우 표시 (marker 대신 placeMarker 사용)
+            kakao.maps.event.addListener(placeMarker, "click", function () {
+              infowindow.open(map, placeMarker);
+            });
+
+            placesMarker.push(placeMarker);
+          }
+        });
+      }
     },
   });
 }
-
-// DOM 요소
-const chatMessages = document.querySelector(".chat-messages");
-const messageInput = document.getElementById("message-input");
-const sendButton = document.getElementById("send-button");
-const loadingElement = document.getElementById("loading");
-
-// 지도 관련 변수
-let map;
-let userMarkers = []; // 사용자 마커를 저장할 배열 추가
 
 // 지도 초기화
 async function initializeMap() {
@@ -220,11 +251,11 @@ async function displayUserLocations() {
     const friends = data.friends;
     console.log("Friend Details:", friendDetails);
 
-    const meetingInfoText = `모임장소: ${optimalMeetingPoint}\n
-    모임설명: ${miomDescription}\n
-    모임인원: ${friends.length}\n
-    선호취향: ${friendDetails.positive_prompt.join(", ")}\n
-    비선호취향: ${friendDetails.negative_prompt.join(", ")}\n
+    const meetingInfoText = `모임장소: ${optimalMeetingPoint},
+    모임설명: ${miomDescription},
+    모임인원: ${friends.length},
+    선호취향: ${friendDetails.positive_prompt.join(", ")},
+    비선호취향: ${friendDetails.negative_prompt.join(", ")},
     위 조건에 맞는 모임장소를 추천해줘`;
 
     console.log("meetingInfoText:", meetingInfoText);
@@ -427,15 +458,29 @@ function drawUserPath(path, color, userName, startPoint) {
   });
   userMarkers.set(userName, startMarker);
 
+  const markerPosition = startMarker.getPosition();
+  const offset = 0.007; // 이 값을 조절하여 간격 조정
+
   const infowindow = new kakao.maps.InfoWindow({
     content: `<div style="padding:5px;text-align:center;">
-          <strong>${userName}</strong><br>
-          소요시간: ${path.info.totalTime}분
-      </div>`,
+            <strong>${userName}</strong><br>
+            소요시간: ${path.info.totalTime}분
+        </div>`,
     map: map,
-    position: startMarker.getPosition(),
-    yAnchor: 1.5,
+    position: new kakao.maps.LatLng(
+      markerPosition.getLat() + offset, // 위도를 offset만큼 증가
+      markerPosition.getLng() // 경도는 그대로
+    ),
   });
+
+  // const infowindow = new kakao.maps.InfoWindow({
+  //   content: `<div style="padding:5px;text-align:center;">
+  //         <strong>${userName}</strong><br>
+  //         소요시간: ${path.info.totalTime}분
+  //     </div>`,
+  //   map: map,
+  //   position: startMarker.getPosition(),
+  // });
   userInfoWindows.set(userName, infowindow);
 
   path.subPath.forEach((subPath) => {

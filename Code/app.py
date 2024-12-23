@@ -508,9 +508,18 @@ def chat():
                     if isinstance(content, dict) and 'citations' in content:
                         citations = content['citations']
 
+    # 예외 처리를 통해 restaurants 변환 시도
+    try:
+        restaurants = answer_text.split("---")[2].replace("``````", "")
+        restaurants_dict = eval(restaurants)  # eval 사용 시 주의 필요
+        restaurantsJSON = json.dumps(restaurants_dict, indent=4)
+    except (IndexError, ValueError, SyntaxError) as e:
+        print(f"Restaurants 변환 중 오류 발생: {str(e)}")
+        restaurantsJSON = None  # 기본값 설정
     return jsonify({
         'response': answer_text,
-        'citations': citations
+        'citations': citations,
+        'restaurants': restaurantsJSON
     })
 
 
