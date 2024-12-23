@@ -7,7 +7,7 @@ import os
 # 각각의 현재 위치에서 가장 가까운 역 찾기
 def find_nearest_stations(origins):
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 현재 파일의 절대 경로
-    csv_path = os.path.join(BASE_DIR, '../Data/maps/seoul_subway.csv')
+    csv_path = os.path.join(BASE_DIR, '../Data/maps/updated_seoul_subway.csv')
     def calculate_distance(lat1, lon1, lat2, lon2):
         R = 6371
         lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
