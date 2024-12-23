@@ -341,9 +341,19 @@ if (memberCountInput) {
   });
 }
 
+//경로 색상 생성 함수
 function generateRandomColor() {
-  const hue = Math.floor(Math.random() * 360);
-  return `hsl(${hue}, 70%, 50%)`;
+  const rainbowColors = [
+    "#FF0000", // 빨간색
+    "#FF7F00", // 주황색
+    "#FFFF00", // 노란색
+    "#00FF00", // 초록색
+    "#0000FF", // 파란색
+    "#4B0082", // 남색
+    "#9400D3", // 보라색
+  ];
+
+  return rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
 }
 
 // 모든 사용자의 경로 표시
@@ -360,6 +370,7 @@ async function drawAllUserPaths(meetingDetails) {
     ),
     map: map,
   });
+
   // 목적지 정보창
   new kakao.maps.InfoWindow({
     content: `<div style="padding:5px;text-align:center;">
@@ -380,20 +391,19 @@ async function drawAllUserPaths(meetingDetails) {
   }
 }
 
-// // 경로 찾기 API 호출
-// async function findPath(startX, startY, endX, endY) {
-//   try {
-//     const response = await fetch(
-//       `/find-path?sx=${startX}&sy=${startY}&ex=${endX}&ey=${endY}`
-//     );
-//     return await response.json();
-//   } catch (error) {
-//     console.error("Error finding path:", error);
-//     return null;
-//   }
-// }
+// SVG 마커 이미지 생성 함수
+function createMarkerImageSrc(color) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="35" viewBox="0 0 24 35">
+      <path fill="${color}" d="M12 0C5.383 0 0 5.383 0 12c0 9 12 23 12 23s12-14 12-23c0-6.617-5.383-12-12-12z"/>
+    </svg>
+  `;
 
-// 사용자별 경로 그리기
+  const base64 = btoa(svg);
+  return "data:image/svg+xml;base64," + base64;
+}
+
+// 사용자별 경로 그리기 함수
 function drawUserPath(path, color, userName, startPoint) {
   let userMarkers = new Map(); // 사용자 마커를 저장할 Map
   let userPaths = new Map(); // 사용자 경로를 저장할 Map
@@ -405,9 +415,17 @@ function drawUserPath(path, color, userName, startPoint) {
 
   const pathLines = [];
 
+  // 마커 이미지 생성
+  const markerSize = new kakao.maps.Size(24, 35);
+  const markerImage = new kakao.maps.MarkerImage(
+    createMarkerImageSrc(color),
+    markerSize
+  );
+
   const startMarker = new kakao.maps.Marker({
     position: new kakao.maps.LatLng(startPoint.latitude, startPoint.longitude),
     map: map,
+    image: markerImage,
   });
   userMarkers.set(userName, startMarker);
 
@@ -418,6 +436,7 @@ function drawUserPath(path, color, userName, startPoint) {
       </div>`,
     map: map,
     position: startMarker.getPosition(),
+    yAnchor: 1.5,
   });
   userInfoWindows.set(userName, infowindow);
 
@@ -429,7 +448,7 @@ function drawUserPath(path, color, userName, startPoint) {
 
       const polyline = new kakao.maps.Polyline({
         path: linePath,
-        strokeWeight: 5,
+        strokeWeight: 8,
         strokeColor: color,
         strokeOpacity: 0.7,
       });
